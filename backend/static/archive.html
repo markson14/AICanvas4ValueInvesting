@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公司档案 | AlphaSeeker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 900: '#0c4a6e' },
+                        bull: '#10b981', bear: '#ef4444', hold: '#f59e0b'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .company-card { transition: all 0.2s; }
+        .company-card:hover { transform: translateX(4px); }
+        .company-card.active { background: #e0f2fe; border-color: #0ea5e9; }
+        .timeline-item { position: relative; padding-left: 24px; }
+        .timeline-item::before { content: ''; position: absolute; left: 6px; top: 24px; bottom: -12px; width: 2px; background: #e2e8f0; }
+        .timeline-item:last-child::before { display: none; }
+        .timeline-dot { position: absolute; left: 0; top: 8px; width: 14px; height: 14px; border-radius: 50%; background: #0ea5e9; border: 3px solid white; box-shadow: 0 0 0 2px #e2e8f0; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="flex items-center gap-3 hover:opacity-80">
+                    <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-xl font-black text-white shadow-sm">α</div>
+                    <div>
+                        <h1 class="font-black text-slate-900 leading-none tracking-tight">公司档案</h1>
+                        <span class="text-xs font-bold text-gray-400">AlphaSeeker Archive</span>
+                    </div>
+                </a>
+            </div>
+            <a href="index.html" class="text-sm text-brand-600 hover:underline"><i class="fas fa-arrow-left mr-1"></i> 返回分析</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            <!-- Left: Company List -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="p-4 border-b border-gray-100 bg-gray-50">
+                        <h2 class="font-bold text-gray-800"><i class="fas fa-building mr-2 text-brand-500"></i>公司列表</h2>
+                    </div>
+                    <div class="p-2">
+                        <input type="text" id="searchInput" placeholder="搜索公司..." class="w-full bg-gray-50 border border-gray-200 rounded px-3 py-2 text-sm mb-2" oninput="filterCompanies()">
+                    </div>
+                    <div id="companyList" class="max-h-[70vh] overflow-y-auto p-2 space-y-1">
+                        <!-- Dynamic -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Timeline View -->
+            <div class="lg:col-span-3">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                        <h2 class="font-bold text-gray-800"><i class="fas fa-clock mr-2 text-brand-500"></i>分析时间轴</h2>
+                        <span id="selectedCompany" class="text-sm text-gray-500">选择一家公司查看历史</span>
+                    </div>
+                    
+                    <div id="emptyTimeline" class="p-12 text-center text-gray-400">
+                        <i class="fas fa-folder-open text-5xl mb-4 text-gray-200"></i>
+                        <p>从左侧选择一家公司查看其历史分析记录</p>
+                    </div>
+
+                    <div id="timeline" class="hidden p-6 space-y-6">
+                        <!-- Dynamic Timeline Items -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = '/api';
+        let allHistory = [];
+        let companies = [];
+
+        // Load all history on page load
+        async function init() {
+            try {
+                const res = await fetch(`${API_BASE}/history`);
+                allHistory = await res.json();
+                
+                // Extract unique companies
+                const companyMap = {};
+                allHistory.forEach(item => {
+                    const ticker = item.ticker;
+                    if (!companyMap[ticker]) {
+                        companyMap[ticker] = {
+                            ticker: ticker,
+                            name: item.data?.company_name || ticker,
+                            count: 0,
+                            lastDate: item.timestamp
+                        };
+                    }
+                    companyMap[ticker].count++;
+                    if (item.timestamp > companyMap[ticker].lastDate) {
+                        companyMap[ticker].lastDate = item.timestamp;
+                    }
+                });
+                
+                companies = Object.values(companyMap).sort((a, b) => new Date(b.lastDate) - new Date(a.lastDate));
+                renderCompanyList();
+            } catch (e) {
+                console.error('Failed to load history:', e);
+            }
+        }
+
+        function renderCompanyList() {
+            const container = document.getElementById('companyList');
+            container.innerHTML = companies.map(c => `
+                <div class="company-card p-3 rounded-lg border border-gray-100 cursor-pointer hover:bg-gray-50" onclick="selectCompany('${c.ticker}')" data-ticker="${c.ticker}">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-gray-800 text-sm">${c.ticker}</p>
+                            <p class="text-xs text-gray-500 truncate max-w-[120px]">${c.name}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs bg-brand-100 text-brand-700 px-2 py-0.5 rounded font-bold">${c.count}</span>
+                            <p class="text-[10px] text-gray-400 mt-1">${new Date(c.lastDate).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterCompanies() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.company-card');
+            cards.forEach(card => {
+                const ticker = card.dataset.ticker.toLowerCase();
+                const text = card.innerText.toLowerCase();
+                card.style.display = (ticker.includes(query) || text.includes(query)) ? 'block' : 'none';
+            });
+        }
+
+        function selectCompany(ticker) {
+            // Highlight selected
+            document.querySelectorAll('.company-card').forEach(c => c.classList.remove('active'));
+            document.querySelector(`.company-card[data-ticker="${ticker}"]`)?.classList.add('active');
+            
+            // Filter history
+            const records = allHistory.filter(h => h.ticker === ticker).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            document.getElementById('selectedCompany').innerText = `${ticker} (${records.length} 条记录)`;
+            document.getElementById('emptyTimeline').classList.add('hidden');
+            document.getElementById('timeline').classList.remove('hidden');
+            
+            renderTimeline(records);
+        }
+
+        function renderTimeline(records) {
+            const container = document.getElementById('timeline');
+            container.innerHTML = records.map(record => {
+                const data = record.data || {};
+                const radar = data.radar_scores || {};
+                const avgScore = ((radar.moat||0) + (radar.management||0) + (radar.financials||0) + (radar.growth||0) + (radar.valuation||0)) / 5;
+                
+                return `
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <p class="font-bold text-gray-800">${data.company_name || record.ticker}</p>
+                                <p class="text-xs text-gray-400">${new Date(record.timestamp).toLocaleString()}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-bold">${data.valuation_type || 'N/A'}</span>
+                                <span class="text-xs font-bold ${avgScore >= 7 ? 'text-bull' : avgScore >= 5 ? 'text-hold' : 'text-bear'}">
+                                    评分: ${avgScore.toFixed(1)}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <p class="text-sm text-gray-600 mb-3 line-clamp-2">${data.business_model?.summary || data.analysis_normal?.business_essence || data.analysis_normal?.essence || '---'}</p>
+                        
+                        <div class="grid grid-cols-5 gap-2 mb-3">
+                            ${['护城河', '管理层', '财务', '增长', '估值'].map((label, i) => {
+                                const key = ['moat', 'management', 'financials', 'growth', 'valuation'][i];
+                                const val = radar[key] || 0;
+                                return `<div class="text-center">
+                                    <div class="text-[10px] text-gray-400">${label}</div>
+                                    <div class="font-bold text-sm ${val >= 7 ? 'text-bull' : val >= 5 ? 'text-hold' : 'text-bear'}">${val}</div>
+                                </div>`;
+                            }).join('')}
+                        </div>
+                        
+                        <div class="flex justify-between items-center pt-3 border-t border-gray-200">
+                            <div class="flex gap-2">
+                                ${renderMasterBadge(data.master_views?.buffett, '🧙‍♂️')}
+                                ${renderMasterBadge(data.master_views?.munger, '🧠')}
+                                ${renderMasterBadge(data.master_views?.duanyongping, '🧘‍♂️')}
+                            </div>
+                            <button onclick='loadToMain(${JSON.stringify(record).replace(/'/g, "&#39;")})' class="text-xs text-brand-600 hover:underline">
+                                <i class="fas fa-external-link-alt mr-1"></i>加载到分析器
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function renderMasterBadge(master, emoji) {
+            if (!master) return '';
+            const v = master.verdict?.toUpperCase() || 'N/A';
+            const colorClass = v === 'BUY' ? 'bg-bull' : v === 'REJECT' ? 'bg-bear' : 'bg-hold';
+            return `<span class="text-xs ${colorClass} text-white px-2 py-0.5 rounded font-bold">${emoji} ${v}</span>`;
+        }
+
+        function loadToMain(record) {
+            // Store in sessionStorage and redirect
+            sessionStorage.setItem('loadRecord', JSON.stringify(record));
+            window.location.href = 'index.html?load=1';
+        }
+
+        // Check if returning from archive with data
+        if (window.location.search.includes('load=1')) {
+            const record = JSON.parse(sessionStorage.getItem('loadRecord') || 'null');
+            if (record) {
+                sessionStorage.removeItem('loadRecord');
+                // This is handled in index.html
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
+

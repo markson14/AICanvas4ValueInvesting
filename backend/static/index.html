@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlphaSeeker | 智能价值投资看板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#faf5ff', 100: '#f3e8ff', 500: '#a855f7', 600: '#9333ea', 900: '#581c87' },
+                        bull: '#22c55e',
+                        bear: '#ef4444',
+                        hold: '#f59e0b'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0f0f23 100%); min-height: 100vh; color: #e2e8f0; }
+        
+        /* Header Inputs */
+        .header-input { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 6px 10px; font-weight: 600; font-size: 0.85rem; color: #fff; transition: all 0.2s; width: 100%; }
+        .header-input:focus { outline: none; border-color: #a855f7; background: rgba(168,85,247,0.1); box-shadow: 0 0 0 2px rgba(168,85,247,0.2); }
+        .header-label { font-size: 0.65rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; display: block; }
+        
+        /* Cards */
+        .card { background: rgba(255,255,255,0.03); border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(10px); }
+        .card-header { font-size: 0.75rem; font-weight: 800; color: #a855f7; text-transform: uppercase; letter-spacing: 0.1em; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        
+        /* Verdict Badges */
+        .verdict-badge { font-size: 0.6rem; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
+        .verdict-buy { background: #22c55e; color: white; }
+        .verdict-hold { background: #f59e0b; color: white; }
+        .verdict-reject { background: #ef4444; color: white; }
+        
+        /* Loader */
+        .loader { border: 2px solid rgba(255,255,255,0.1); border-top-color: #a855f7; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Toast */
+        .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 10px; font-weight: 600; font-size: 0.85rem; z-index: 1000; animation: slideIn 0.3s ease-out; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .toast-success { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
+        .toast-error { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+        .toast-info { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        /* Left Drawer */
+        .drawer { position: fixed; top: 0; left: -360px; width: 340px; height: 100vh; background: rgba(15,15,35,0.98); border-right: 1px solid rgba(255,255,255,0.1); z-index: 100; transition: left 0.3s ease-in-out; padding: 20px; overflow-y: auto; backdrop-filter: blur(20px); }
+        .drawer.open { left: 0; }
+        .drawer-toggle { position: fixed; top: 100px; left: 12px; z-index: 101; background: rgba(168,85,247,0.9); color: white; border: none; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; box-shadow: 0 4px 15px rgba(168,85,247,0.3); }
+        .drawer-toggle:hover { background: #a855f7; transform: scale(1.05); }
+        .drawer.open + .drawer-toggle { left: 352px; }
+        
+        /* Action Buttons */
+        .action-btn { background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+        .action-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(168,85,247,0.4); }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .action-btn-secondary { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); }
+        .action-btn-secondary:hover { background: rgba(255,255,255,0.12); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+        
+        /* Master Card */
+        .master-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; transition: all 0.2s; }
+        .master-card:hover { background: rgba(255,255,255,0.04); border-color: rgba(168,85,247,0.3); }
+        
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 200; display: none; align-items: center; justify-content: center; }
+        .modal-content { background: #1a1a3e; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+        ::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.3); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(168,85,247,0.5); }
+    </style>
+</head>
+<body class="pb-16">
+
+    <!-- Left History Drawer -->
+    <div id="historyDrawer" class="drawer">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                <i class="fas fa-clock-rotate-left text-brand-500"></i> 分析档案
+            </h3>
+            <button onclick="toggleHistory()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-xmark text-lg"></i>
+            </button>
+        </div>
+        <select id="historyFilter" onchange="loadHistory()" class="w-full mb-4 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+            <option value="">全部公司</option>
+        </select>
+        <div id="historyList" class="space-y-3"></div>
+    </div>
+    <button class="drawer-toggle" onclick="toggleHistory()">
+        <i class="fas fa-folder-open"></i>
+    </button>
+
+    <!-- Sticky Header -->
+    <header class="fixed top-0 w-full bg-black/40 backdrop-blur-xl border-b border-white/10 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <div class="flex flex-col lg:flex-row items-center justify-between gap-4">
+                
+                <!-- Logo & Ticker Input -->
+                <div class="flex items-center gap-4 min-w-[280px]">
+                    <div class="w-10 h-10 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center text-xl font-black text-white shadow-lg shadow-brand-500/30">α</div>
+                    <div class="flex gap-2">
+                        <div class="w-28">
+                            <label class="header-label">股票代码</label>
+                            <input type="text" id="inp-ticker" placeholder="9992.HK" class="header-input">
+                        </div>
+                        <div class="w-24">
+                            <label class="header-label">当前股价</label>
+                            <input type="number" id="inp-price" placeholder="100" step="0.1" class="header-input text-green-400">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Core Financial Inputs -->
+                <div class="flex flex-1 items-center gap-2 overflow-x-auto w-full justify-center lg:justify-end pb-1 lg:pb-0">
+                    <div class="w-28 flex-shrink-0">
+                        <label class="header-label">营收 (亿)</label>
+                        <input type="text" id="fin-revenue" placeholder="100" class="header-input">
+                    </div>
+                    <div class="w-28 flex-shrink-0">
+                        <label class="header-label">净利润 (亿)</label>
+                        <input type="text" id="fin-profit" placeholder="20" class="header-input">
+                    </div>
+                    <div class="w-24 flex-shrink-0">
+                        <label class="header-label">PE (TTM)</label>
+                        <input type="text" id="fin-pe" placeholder="25" class="header-input">
+                    </div>
+                    <div class="w-28 flex-shrink-0">
+                        <label class="header-label">增长率 (%)</label>
+                        <input type="text" id="fin-growth" placeholder="30%" class="header-input">
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-2">
+                    <button id="btn-analyze" onclick="runAnalysis()" class="action-btn">
+                        <i class="fas fa-brain"></i> 分析
+                    </button>
+                    <button id="btn-react" onclick="triggerReact()" class="action-btn action-btn-secondary">
+                        <i class="fas fa-bolt"></i> ReAct
+                    </button>
+                    <button onclick="toggleConfig()" class="action-btn action-btn-secondary !px-3">
+                        <i class="fas fa-gear"></i>
+                    </button>
+                    <button onclick="toggleImport()" class="action-btn action-btn-secondary !px-3">
+                        <i class="fas fa-file-import"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 pt-28 space-y-6">
+        
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-20">
+            <div class="text-6xl mb-6 opacity-30">📊</div>
+            <h2 class="text-2xl font-bold text-white/60 mb-2">欢迎使用 AlphaSeeker</h2>
+            <p class="text-gray-500 mb-8">输入股票代码和价格，点击「分析」开始智能估值</p>
+            <div class="flex justify-center gap-4">
+                <button onclick="document.getElementById('inp-ticker').focus()" class="action-btn">
+                    <i class="fas fa-rocket"></i> 开始分析
+                </button>
+                <button onclick="toggleImport()" class="action-btn action-btn-secondary">
+                    <i class="fas fa-file-import"></i> 导入 JSON
+                </button>
+            </div>
+        </div>
+        
+        <!-- Dashboard (Hidden by default) -->
+        <div id="dashboard" class="hidden space-y-6">
+            
+            <!-- Company Header -->
+            <div class="card p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 id="company-name" class="text-2xl font-black text-white">---</h1>
+                    <p id="txt-react-summary" class="text-sm text-gray-400 mt-1"></p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-center">
+                        <div class="text-xs text-gray-500 uppercase font-bold">公允价值</div>
+                        <div id="txt-fair-value" class="text-xl font-black text-brand-500">---</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xs text-gray-500 uppercase font-bold">安全边际</div>
+                        <div id="txt-margin" class="text-xl font-black text-bull">---</div>
+                    </div>
+                    <div id="txt-verdict" class="verdict-badge verdict-hold">HOLD</div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Left Column -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <!-- Business Model -->
+                    <div class="card p-6">
+                        <div class="card-header"><i class="fas fa-building"></i> 生意模式</div>
+                        <p id="txt-business-summary" class="text-sm text-gray-300 leading-relaxed mb-4">---</p>
+                        <div class="flex flex-wrap gap-2 mb-4" id="txt-revenue-streams"></div>
+                        <p id="txt-competitive-position" class="text-xs text-gray-500">---</p>
+                    </div>
+                    
+                    <!-- Moat Analysis -->
+                    <div class="card p-6">
+                        <div class="card-header"><i class="fas fa-shield-halved"></i> 护城河诊断</div>
+                        <div class="flex flex-col md:flex-row gap-6">
+                            <div class="flex-1 space-y-3">
+                                <div class="flex items-center gap-3">
+                                    <span id="txt-moat-type" class="text-sm font-bold text-brand-400">---</span>
+                                    <span id="txt-moat-strength" class="text-xs text-gray-500">---</span>
+                                </div>
+                                <p id="txt-moat-desc" class="text-sm text-gray-300 leading-relaxed">---</p>
+                                <p id="txt-moat-risks" class="text-xs text-red-400/80 bg-red-500/10 p-3 rounded-lg">---</p>
+                            </div>
+                            <div class="w-full md:w-48 h-48">
+                                <canvas id="radarChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Master Views -->
+                    <div class="card p-6">
+                        <div class="card-header"><i class="fas fa-users"></i> 投资大师委员会</div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Buffett -->
+                            <div class="master-card">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="text-xl">🧙‍♂️</span>
+                                    <span id="verdict-buffett" class="verdict-badge verdict-hold">HOLD</span>
+                                </div>
+                                <h4 class="text-sm font-bold text-white mb-2">巴菲特</h4>
+                                <p id="txt-buffett-quote" class="text-xs text-gray-400 italic mb-2">"---"</p>
+                                <p id="txt-buffett-reason" class="text-xs text-gray-500">---</p>
+                            </div>
+                            <!-- Munger -->
+                            <div class="master-card">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="text-xl">🧠</span>
+                                    <span id="verdict-munger" class="verdict-badge verdict-hold">HOLD</span>
+                                </div>
+                                <h4 class="text-sm font-bold text-white mb-2">芒格</h4>
+                                <p id="txt-munger-quote" class="text-xs text-gray-400 italic mb-2">"---"</p>
+                                <p id="txt-munger-reason" class="text-xs text-gray-500">---</p>
+                            </div>
+                            <!-- Duan -->
+                            <div class="master-card">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="text-xl">🧘‍♂️</span>
+                                    <span id="verdict-duan" class="verdict-badge verdict-hold">HOLD</span>
+                                </div>
+                                <h4 class="text-sm font-bold text-white mb-2">段永平</h4>
+                                <p id="txt-duan-quote" class="text-xs text-gray-400 italic mb-2">"---"</p>
+                                <p id="txt-duan-reason" class="text-xs text-gray-500">---</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Valuation -->
+                    <div class="card p-6">
+                        <div class="card-header"><i class="fas fa-calculator"></i> 估值模型 <span id="txt-model-type" class="ml-2 text-brand-500">---</span></div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs text-gray-500 uppercase font-bold">模型选择理由</label>
+                                <p id="txt-val-model-reason" class="text-sm text-gray-300 mt-1">---</p>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500 uppercase font-bold">关键假设</label>
+                                <p id="txt-val-assumptions" class="text-sm text-gray-300 mt-1">---</p>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500 uppercase font-bold">计算步骤</label>
+                                <p id="txt-val-steps" class="text-sm text-gray-300 mt-1">---</p>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500 uppercase font-bold">估值参数</label>
+                                <pre id="txt-val-params" class="text-xs text-brand-400 bg-black/30 p-3 rounded-lg mt-1 overflow-x-auto">---</pre>
+                            </div>
+                        </div>
+                        
+                        <!-- Reasoning Trace (Collapsible) -->
+                        <div class="mt-4 pt-4 border-t border-white/10">
+                            <button onclick="toggleTrace()" class="text-xs text-gray-500 hover:text-gray-300 flex items-center gap-2">
+                                <i id="icon-trace" class="fas fa-chevron-down"></i> 完整推理过程
+                            </button>
+                            <p id="txt-reasoning" class="hidden text-xs text-gray-500 mt-3 whitespace-pre-wrap bg-black/20 p-3 rounded-lg">---</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Challenge Section -->
+                    <div class="card p-6">
+                        <div class="card-header"><i class="fas fa-meteor text-red-400"></i> 空头压力测试</div>
+                        <div class="flex gap-3">
+                            <input type="text" id="inp-bear" placeholder="输入看空观点，如：'用户增长放缓会导致...'" class="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-gray-500">
+                            <button id="btn-challenge" onclick="submitChallenge()" class="action-btn !bg-gradient-to-r !from-red-500 !to-orange-500">
+                                <i class="fas fa-meteor"></i>
+                            </button>
+                        </div>
+                        <div id="challenge-result" class="hidden mt-4 p-4 bg-red-500/10 rounded-lg border border-red-500/20">
+                            <p id="txt-bear-impact" class="text-sm text-red-400 font-bold mb-2">---</p>
+                            <p id="txt-bear-reason" class="text-xs text-gray-400">---</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column -->
+                <div class="space-y-6">
+                    
+                    <!-- North Star Metrics -->
+                    <div class="card p-6">
+                        <div class="card-header"><i class="fas fa-star text-yellow-400"></i> 北极星指标</div>
+                        <div id="metrics-container" class="space-y-3 mb-4"></div>
+                        <div class="flex gap-2">
+                            <input type="text" id="new-metric-name" placeholder="指标名称" class="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white">
+                            <input type="text" id="new-metric-val" placeholder="值" class="w-20 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white">
+                            <button onclick="addMetric()" class="action-btn !px-3 !py-2 text-xs">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="card p-6">
+                        <div class="card-header"><i class="fas fa-bolt"></i> 快捷操作</div>
+                        <div class="space-y-3">
+                            <button onclick="saveCurrentAnalysis()" class="w-full action-btn action-btn-secondary justify-center">
+                                <i class="fas fa-floppy-disk"></i> 保存当前分析
+                            </button>
+                            <button onclick="exportData()" class="w-full action-btn action-btn-secondary justify-center">
+                                <i class="fas fa-download"></i> 导出 JSON
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Config Modal -->
+    <div id="configModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-white">API 配置</h3>
+                <button onclick="toggleConfig()" class="text-gray-400 hover:text-white"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="header-label">Base URL</label>
+                    <input type="text" id="configBaseUrl" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                </div>
+                <div>
+                    <label class="header-label">API Key</label>
+                    <input type="password" id="configKey" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                </div>
+                <div>
+                    <label class="header-label">Model</label>
+                    <input type="text" id="configModel" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                </div>
+                <button onclick="saveConfig()" class="w-full action-btn justify-center">保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div id="importModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-white">导入分析数据</h3>
+                <button onclick="toggleImport()" class="text-gray-400 hover:text-white"><i class="fas fa-xmark"></i></button>
+            </div>
+            <textarea id="jsonInput" rows="12" placeholder="粘贴 JSON 数据..." class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono resize-none mb-4"></textarea>
+            <button onclick="processImport()" class="w-full action-btn justify-center">导入并渲染</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        
+        let state = {
+            config: {
+                baseUrl: localStorage.getItem('ls_base_url') || 'https://api.openai.com/v1',
+                apiKey: localStorage.getItem('ls_api_key') || '',
+                model: localStorage.getItem('ls_model') || 'gpt-4o'
+            },
+            currentData: null,
+            chart: null,
+            metrics: []
+        };
+
+        // === INIT ===
+        (async function init() {
+            document.getElementById('configBaseUrl').value = state.config.baseUrl;
+            document.getElementById('configKey').value = state.config.apiKey;
+            document.getElementById('configModel').value = state.config.model;
+            
+            const historyList = await loadHistory();
+            
+            if (window.location.search.includes('load=1')) {
+                const record = JSON.parse(sessionStorage.getItem('loadRecord') || 'null');
+                if (record) {
+                    sessionStorage.removeItem('loadRecord');
+                    restoreData(record);
+                    history.replaceState({}, '', window.location.pathname);
+                    return;
+                }
+            }
+            
+            if (historyList && historyList.length > 0) {
+                try {
+                    restoreData(historyList[0], false);
+                    showToast("已自动载入最新分析记录", "info");
+                } catch (e) {
+                    console.error("Auto-load failed", e);
+                }
+            }
+        })();
+
+        // === CORE FUNCTIONS ===
+        async function runAnalysis() {
+            const ticker = document.getElementById('inp-ticker').value;
+            const price = parseFloat(document.getElementById('inp-price').value);
+            if (!ticker || isNaN(price)) return showToast('请输入有效信息', 'error');
+
+            setLoading('analyze', true);
+            try {
+                const payload = { ticker, price, custom_metrics: state.metrics };
+                const res = await fetch(`${API_BASE}/analyze`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error(await res.text());
+                const data = await res.json();
+                state.currentData = data;
+                state.currentData.ticker = ticker;
+                state.metrics = data.north_star_metrics || [];
+                renderDashboard(data, price);
+                showToast("分析完成", "success");
+            } catch (e) { showToast(e.message, 'error'); } 
+            finally { setLoading('analyze', false); }
+        }
+
+        async function triggerReact() {
+            if (!state.currentData) return showToast("请先进行基础分析", "error");
+            
+            setLoading('react', true);
+            showToast("正在进行 ReAct 推演...", "info");
+            
+            const snapshot = {
+                metrics: {
+                    revenue: document.getElementById('fin-revenue').value,
+                    net_profit: document.getElementById('fin-profit').value,
+                    pe_ttm: document.getElementById('fin-pe').value,
+                    revenue_growth_yoy: document.getElementById('fin-growth').value
+                },
+                period: "Latest"
+            };
+            
+            try {
+                const res = await fetch(`${API_BASE}/react`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        old_context: state.currentData, 
+                        financial_snapshot: snapshot,
+                        custom_metrics: state.metrics 
+                    })
+                });
+                
+                if (!res.ok) throw new Error(await res.text());
+                const result = await res.json();
+                
+                // Update state with merged results
+                state.currentData.radar_scores = result.new_radar_scores;
+                state.currentData.analysis_normal = result.new_analysis_normal;
+                state.currentData.master_views = result.master_views;
+                state.currentData.valuation_type = result.valuation_type;
+                state.currentData.valuation_explanation = result.valuation_explanation;
+                state.currentData.valuation_params = result.valuation_params;
+                state.currentData.react_summary = result.react_summary;
+                state.currentData.valuation_verdict = result.valuation_verdict;
+                state.currentData.fair_value_range = result.fair_value_range;
+                
+                renderDashboard(state.currentData, parseFloat(document.getElementById('inp-price').value));
+                showToast("ReAct 推演完成：估值与观点已更新", "success");
+                
+            } catch (e) { 
+                showToast(e.message, 'error'); 
+            } finally {
+                setLoading('react', false);
+            }
+        }
+
+        async function submitChallenge() {
+            const arg = document.getElementById('inp-bear').value;
+            if (!arg || !state.currentData) return showToast("请输入空头观点", "error");
+            
+            const btn = document.getElementById('btn-challenge');
+            btn.innerHTML = '<div class="loader w-4 h-4"></div>';
+            btn.disabled = true;
+            
+            try {
+                const res = await fetch(`${API_BASE}/challenge`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ context: state.currentData, bear_argument: arg })
+                });
+                if (!res.ok) throw new Error(await res.text());
+                const result = await res.json();
+                
+                document.getElementById('challenge-result').classList.remove('hidden');
+                document.getElementById('txt-bear-impact').innerText = result.bearish_impact || "压力测试结果";
+                document.getElementById('txt-bear-reason').innerText = result.impact_reasoning || "";
+                if (result.new_radar_scores) renderChart(result.new_radar_scores);
+            } catch (e) { showToast(e.message, 'error'); }
+            finally { 
+                btn.innerHTML = '<i class="fas fa-meteor"></i>'; 
+                btn.disabled = false;
+            }
+        }
+
+        async function saveCurrentAnalysis() {
+            if (!state.currentData) return showToast("暂无数据可保存", "error");
+            try {
+                const dataToSave = { ...state.currentData, financial_snapshot: getFinancialSnapshot() };
+                await fetch(`${API_BASE}/save`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ ticker: document.getElementById('inp-ticker').value, data: dataToSave })
+                });
+                showToast("已保存", "success"); 
+                loadHistory();
+            } catch (e) { showToast("保存失败", 'error'); }
+        }
+
+        async function loadHistory() {
+            try {
+                const filter = document.getElementById('historyFilter').value;
+                const url = filter ? `${API_BASE}/history?ticker=${filter}` : `${API_BASE}/history`;
+                const res = await fetch(url);
+                const history = await res.json();
+                
+                if (!filter) {
+                    const tickers = [...new Set(history.map(h => h.ticker))];
+                    const select = document.getElementById('historyFilter');
+                    const currentVal = select.value;
+                    select.innerHTML = '<option value="">全部公司</option>' + tickers.map(t => `<option value="${t}">${t}</option>`).join('');
+                    select.value = currentVal;
+                }
+
+                const container = document.getElementById('historyList');
+                container.innerHTML = history.map(item => `
+                    <div class="bg-white/5 p-3 rounded-lg cursor-pointer hover:bg-white/10 border border-white/5 transition-all" onclick='restoreData(${JSON.stringify(item).replace(/'/g, "&#39;")})'>
+                        <div class="flex justify-between font-bold text-sm text-white">
+                            <span>${item.ticker}</span>
+                            <span class="text-xs text-gray-500">${new Date(item.timestamp).toLocaleDateString()}</span>
+                        </div>
+                        <div class="text-xs text-gray-400 mt-1 truncate">${item.data?.company_name || '---'}</div>
+                        ${item.type === 'react_update' ? '<span class="text-[9px] bg-brand-500/20 text-brand-400 px-1.5 py-0.5 rounded mt-1 inline-block">ReAct</span>' : ''}
+                    </div>
+                `).join('');
+                
+                return history;
+            } catch(e) { 
+                console.log('History load failed:', e); 
+                return [];
+            }
+        }
+
+        // === RENDERING ===
+        function renderDashboard(data, currentPrice) {
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            
+            // Company Header
+            document.getElementById('company-name').innerText = `${data.company_name || '---'} (${data.currency || '---'})`;
+            document.getElementById('txt-react-summary').innerText = data.react_summary || '';
+            
+            // Business Model
+            const bm = data.business_model || {};
+            document.getElementById('txt-business-summary').innerText = bm.summary || data.analysis_normal?.essence || data.analysis_normal?.business_essence || '---';
+            document.getElementById('txt-revenue-streams').innerHTML = (bm.revenue_streams || []).map(s => `<span class="bg-brand-500/20 text-brand-400 px-2 py-1 rounded text-xs">${s}</span>`).join('') || '';
+            document.getElementById('txt-competitive-position').innerText = bm.competitive_position || '';
+
+            // Moat
+            const moat = data.moat_analysis || {};
+            document.getElementById('txt-moat-type').innerText = moat.moat_type || '---';
+            document.getElementById('txt-moat-strength').innerText = `强度: ${moat.moat_strength || '---'}`;
+            document.getElementById('txt-moat-desc').innerText = moat.moat_description || data.analysis_normal?.moat_status || '---';
+            document.getElementById('txt-moat-risks').innerText = `⚠️ ${moat.moat_risks || '---'}`;
+
+            // Masters
+            const masters = data.master_views || {};
+            renderMaster('buffett', masters.buffett, data.analysis_normal);
+            renderMaster('munger', masters.munger, data.analysis_normal);
+            renderMaster('duan', masters.duanyongping, data.analysis_normal);
+
+            // Valuation
+            document.getElementById('txt-model-type').innerText = data.valuation_type || '---';
+            const valExp = data.valuation_explanation || {};
+            document.getElementById('txt-val-model-reason').innerText = valExp.model_choice_reason || '---';
+            document.getElementById('txt-val-assumptions').innerText = valExp.key_assumptions || '---';
+            document.getElementById('txt-val-steps').innerText = valExp.calculation_steps || '---';
+            document.getElementById('txt-val-params').innerText = JSON.stringify(data.valuation_params || {}, null, 2);
+            document.getElementById('txt-reasoning').innerText = data.reasoning_trace || data.valuation_adjustment_reasoning || data.verdict_reasoning || "";
+
+            renderChart(data.radar_scores);
+            renderMetricsList();
+            calculateValuationDisplay(data.valuation_params, data.valuation_type, currentPrice, data.fair_value_range);
+        }
+
+        function renderMaster(id, masterData, fallback) {
+            const verdictEl = document.getElementById(`verdict-${id}`);
+            const quoteEl = document.getElementById(`txt-${id}-quote`);
+            const reasonEl = document.getElementById(`txt-${id}-reason`);
+
+            if (masterData) {
+                const v = masterData.verdict?.toUpperCase() || 'HOLD';
+                verdictEl.innerText = v;
+                verdictEl.className = `verdict-badge verdict-${v.toLowerCase() === 'buy' ? 'buy' : v.toLowerCase() === 'reject' ? 'reject' : 'hold'}`;
+                quoteEl.innerText = `"${masterData.quote || '---'}"`;
+                reasonEl.innerText = masterData.reasoning || '';
+            } else if (fallback) {
+                const key = id === 'duan' ? 'duanyongping_quote' : `${id}_quote`;
+                quoteEl.innerText = `"${fallback[key] || '---'}"`;
+                verdictEl.innerText = 'N/A';
+                verdictEl.className = 'verdict-badge bg-gray-600 text-white';
+                reasonEl.innerText = '';
+            }
+        }
+
+        function renderChart(scores) {
+            if (!scores) return;
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            if (state.chart) state.chart.destroy();
+            state.chart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['护城河', '管理层', '财务', '增长', '估值'],
+                    datasets: [{
+                        data: [scores.moat, scores.management, scores.financials, scores.growth, scores.valuation],
+                        backgroundColor: 'rgba(168, 85, 247, 0.2)',
+                        borderColor: '#a855f7',
+                        pointBackgroundColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    scales: { r: { min: 0, max: 10, ticks: { display: false, stepSize: 2 }, pointLabels: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.1)' }, angleLines: { color: 'rgba(255,255,255,0.1)' } } },
+                    plugins: { legend: { display: false } },
+                    maintainAspectRatio: true
+                }
+            });
+        }
+
+        function renderMetricsList() {
+            const container = document.getElementById('metrics-container');
+            container.innerHTML = state.metrics.map((m, i) => `
+                <div class="flex justify-between items-center bg-white/5 p-3 rounded-lg border border-white/5 text-xs group hover:bg-white/10 transition-all">
+                    <div>
+                        <span class="font-bold text-white">${m.name}:</span>
+                        <span class="text-brand-400 ml-1">${m.current_value} ${m.unit||''}</span>
+                    </div>
+                    <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        ${m.broken_threshold ? `<span class="text-[9px] text-red-400">⚠️ &lt;${m.broken_threshold}</span>` : ''}
+                        <button onclick="editMetric(${i})" class="text-gray-400 hover:text-brand-400"><i class="fas fa-edit"></i></button>
+                        <button onclick="removeMetric(${i})" class="text-gray-400 hover:text-red-400"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addMetric() {
+            const name = document.getElementById('new-metric-name').value;
+            const val = document.getElementById('new-metric-val').value;
+            if (name && val) {
+                state.metrics.push({ name, current_value: val, unit: '' });
+                renderMetricsList();
+                document.getElementById('new-metric-name').value = '';
+                document.getElementById('new-metric-val').value = '';
+            }
+        }
+        
+        function removeMetric(i) { state.metrics.splice(i, 1); renderMetricsList(); }
+        
+        function editMetric(i) {
+            const m = state.metrics[i];
+            const newName = prompt("修改指标名称:", m.name);
+            if (newName === null) return;
+            const newVal = prompt("修改指标值:", m.current_value);
+            if (newVal === null) return;
+            if (newName && newVal) {
+                state.metrics[i] = { ...m, name: newName, current_value: newVal };
+                renderMetricsList();
+            }
+        }
+
+        function calculateValuationDisplay(params, type, currentPrice, fairValueRange) {
+            if (!params && !fairValueRange) return;
+            
+            let fairValue = 0;
+            
+            // Use fair_value_range if available (from ReAct)
+            if (fairValueRange && fairValueRange.mid) {
+                fairValue = fairValueRange.mid;
+            } else if (params) {
+                if (type === 'DCF') {
+                    const fcf = params.fcf_per_share || 0, r = params.discount_rate || 0.1, g = params.terminal_growth || 0.02;
+                    fairValue = (fcf > 0 && r > g) ? (fcf * (1+g) / (r - g)) : fcf * 15;
+                } else if (type === 'PEG') {
+                    fairValue = (params.eps || 0) * (params.fair_peg || 1) * ((params.growth_rate||0)*100);
+                } else if (type === 'PB') {
+                    fairValue = (params.bps || 0) * (params.fair_pb || 1);
+                } else if (type === 'PS') {
+                    fairValue = (params.sps || 0) * (params.fair_ps || 1);
+                }
+            }
+
+            const margin = currentPrice > 0 && fairValue > 0 ? ((fairValue - currentPrice) / fairValue) * 100 : 0;
+            document.getElementById('txt-fair-value').innerText = fairValue > 0 ? fairValue.toFixed(2) : '---';
+            
+            const mEl = document.getElementById('txt-margin');
+            mEl.innerText = fairValue > 0 ? margin.toFixed(1) + "%" : '---';
+            mEl.className = margin > 0 ? "text-xl font-black text-bull" : "text-xl font-black text-bear";
+            
+            const vEl = document.getElementById('txt-verdict');
+            if(margin > 30) { vEl.innerText = "BUY"; vEl.className = "verdict-badge verdict-buy"; }
+            else if(margin < -20) { vEl.innerText = "SELL"; vEl.className = "verdict-badge verdict-reject"; }
+            else { vEl.innerText = "HOLD"; vEl.className = "verdict-badge verdict-hold"; }
+        }
+
+        function getFinancialSnapshot() {
+            return {
+                revenue: document.getElementById('fin-revenue').value,
+                net_profit: document.getElementById('fin-profit').value,
+                pe_ttm: document.getElementById('fin-pe').value,
+                revenue_growth_yoy: document.getElementById('fin-growth').value
+            };
+        }
+
+        function restoreData(item, closeDrawer = true) {
+            document.getElementById('inp-ticker').value = item.ticker || '';
+            state.currentData = item.data;
+            state.currentData.ticker = item.ticker;
+            state.metrics = item.data?.north_star_metrics || [];
+            
+            // Restore financial inputs
+            if (item.data?.financial_snapshot) {
+                const f = item.data.financial_snapshot;
+                document.getElementById('fin-revenue').value = f.revenue || '';
+                document.getElementById('fin-profit').value = f.net_profit || '';
+                document.getElementById('fin-pe').value = f.pe_ttm || '';
+                document.getElementById('fin-growth').value = f.revenue_growth_yoy || '';
+            }
+            
+            renderDashboard(item.data, parseFloat(document.getElementById('inp-price').value) || 0);
+            if (closeDrawer) document.getElementById('historyDrawer').classList.remove('open');
+        }
+
+        function processImport() {
+            try {
+                const json = JSON.parse(document.getElementById('jsonInput').value);
+                
+                if (json.ticker) document.getElementById('inp-ticker').value = json.ticker;
+                
+                const fs = json.financial_snapshot || {};
+                document.getElementById('fin-revenue').value = fs.revenue || '';
+                document.getElementById('fin-profit').value = fs.net_profit || '';
+                document.getElementById('fin-pe').value = fs.pe_ttm || '';
+                document.getElementById('fin-growth').value = fs.revenue_growth_yoy || '';
+                
+                if (json.company_name) {
+                    state.currentData = json;
+                    state.metrics = json.north_star_metrics || [];
+                    renderDashboard(json, parseFloat(document.getElementById('inp-price').value) || 0);
+                    showToast("完整分析已导入", "success");
+                } else {
+                    showToast("财报数据已导入，请点击 ReAct", "info");
+                }
+                
+                toggleImport();
+            } catch (e) { showToast("JSON 格式错误: " + e.message, "error"); }
+        }
+        
+        function exportData() {
+            if (!state.currentData) return showToast("暂无数据可导出", "error");
+            const dataStr = JSON.stringify(state.currentData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${state.currentData.ticker || 'analysis'}_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast("已导出", "success");
+        }
+
+        // === HELPERS ===
+        function setLoading(type, loading) {
+            const btn = document.getElementById(`btn-${type}`);
+            if (loading) {
+                btn.disabled = true;
+                btn.innerHTML = `<div class="loader w-4 h-4"></div> ${type === 'analyze' ? '分析中...' : '推演中...'}`;
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = type === 'analyze' 
+                    ? '<i class="fas fa-brain"></i> 分析' 
+                    : '<i class="fas fa-bolt"></i> ReAct';
+            }
+        }
+        
+        function showToast(msg, type = 'success') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-2"></i>${msg}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+        
+        function toggleConfig() { 
+            const m = document.getElementById('configModal');
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+        }
+        
+        function toggleImport() { 
+            const m = document.getElementById('importModal');
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+        }
+        
+        function toggleHistory() { 
+            document.getElementById('historyDrawer').classList.toggle('open'); 
+            if(document.getElementById('historyDrawer').classList.contains('open')) loadHistory();
+        }
+        
+        function toggleTrace() { 
+            document.getElementById('txt-reasoning').classList.toggle('hidden'); 
+            const icon = document.getElementById('icon-trace');
+            icon.classList.toggle('fa-chevron-up');
+            icon.classList.toggle('fa-chevron-down');
+        }
+        
+        function saveConfig() {
+            state.config.baseUrl = document.getElementById('configBaseUrl').value;
+            state.config.apiKey = document.getElementById('configKey').value;
+            state.config.model = document.getElementById('configModel').value;
+            localStorage.setItem('ls_base_url', state.config.baseUrl);
+            localStorage.setItem('ls_api_key', state.config.apiKey);
+            localStorage.setItem('ls_model', state.config.model);
+            showToast("配置已保存", "success");
+            toggleConfig();
+        }
+    </script>
+</body>
+</html>

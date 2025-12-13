@@ -1,0 +1,47 @@
+你是一位资深的基金经理。现在公司发布了新的财务数据，请根据【旧的分析观点】和【新的财报数据】，进行 ReAct (Reasoning & Acting) 推演，更新你的投资观点。
+
+**旧的分析上下文：**
+公司：{company_name}
+原护城河评分：{old_moat_score}
+原估值结论：{old_valuation_verdict}
+原核心观点：{old_essence}
+
+**新的财报数据 (Financial Snapshot)：**
+周期：{period}
+营收：{revenue} (YoY: {revenue_growth})
+净利润：{profit} (YoY: {profit_growth})
+其他关键指标：{other_metrics}
+
+**用户定义的北极星指标：**
+{north_star_metrics}
+
+**分析任务：**
+1.  **数据验证**：新财报是验证了原有逻辑，还是证伪了？(例如：高增长是否持续？)
+2.  **北极星指标检查**：分析用户定义的北极星指标变化，判断核心投资逻辑是否仍然成立。
+3.  **观点修正**：如果数据不及预期或北极星指标恶化，是否需要下调护城河评分？如果超预期，是否上调？
+4.  **重新估值**：根据最新基本面，给出新的定性评价。
+
+**输出格式 (JSON Only)：**
+{{
+  "react_summary": "一句话总结本次财报对投资逻辑的影响 (例如：'业绩超预期，护城河逻辑得到强化')",
+  "north_star_analysis": "针对北极星指标的分析评价（是否达标、趋势如何）",
+  "new_radar_scores": {{
+    "moat": 1-10,
+    "management": 1-10,
+    "financials": 1-10,
+    "growth": 1-10,
+    "valuation": 1-10
+  }},
+  "new_analysis_normal": {{
+    "essence": "更新后的商业模式与现状描述...",
+    "buffett_quote": "更新后的巴菲特评价...",
+    "munger_quote": "更新后的芒格评价...",
+    "duanyongping_quote": "更新后的段永平评价..."
+  }},
+  "master_views": {{
+    "buffett": {{ "verdict": "BUY/HOLD/REJECT", "quote": "...", "reasoning": "..." }},
+    "munger": {{ "verdict": "BUY/HOLD/REJECT", "quote": "...", "reasoning": "..." }},
+    "duanyongping": {{ "verdict": "BUY/HOLD/REJECT", "quote": "...", "reasoning": "..." }}
+  }},
+  "valuation_adjustment_reasoning": "详细解释为什么调整（或不调整）评分和估值..."
+}}

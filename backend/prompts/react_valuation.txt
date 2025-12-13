@@ -1,0 +1,46 @@
+你是一位专业的股票估值分析师。根据以下更新后的定性分析和最新财务数据，请进行定量估值计算。
+
+**定性分析结果（来自 ReAct Step 1）：**
+公司：{company_name}
+投资评估总结：{react_summary}
+北极星指标分析：{north_star_analysis}
+新雷达评分：{new_radar_scores}
+
+**最新财务快照：**
+营收：{revenue}
+净利润：{net_profit}
+PE (TTM)：{pe_ttm}
+增长率：{growth_rate}
+
+**估值任务：**
+1.  **模型选择**：基于公司特性和当前阶段，选择最适合的估值模型 (DCF/PEG/PB/PS)。
+2.  **参数计算**：给出估值模型需要的具体参数。
+3.  **公允价值**：计算合理估值区间。
+4.  **安全边际**：给出投资结论。
+
+**输出格式 (JSON Only)：**
+{{
+  "valuation_type": "DCF/PEG/PB/PS",
+  "valuation_params": {{
+    // 根据 valuation_type 动态返回
+    // DCF: "fcf_per_share", "growth_rate", "discount_rate", "terminal_growth"
+    // PEG: "eps", "growth_rate", "fair_peg"
+    // PB: "bps", "roe", "fair_pb"
+    // PS: "sps", "growth_rate", "fair_ps"
+  }},
+  "valuation_explanation": {{
+    "model_choice_reason": "为什么选择这个估值模型",
+    "key_assumptions": "关键假设说明",
+    "calculation_steps": "计算步骤概述",
+    "sensitivity_notes": "敏感性说明"
+  }},
+  "fair_value_range": {{
+    "low": 0,
+    "mid": 0,
+    "high": 0
+  }},
+  "valuation_verdict": "BUY/HOLD/SELL",
+  "margin_of_safety": "安全边际百分比",
+  "verdict_reasoning": "给出投资结论的详细理由"
+}}
+
