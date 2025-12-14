@@ -200,9 +200,6 @@
                             <div class="text-xs text-brand-600 uppercase font-bold mb-1">安全边际</div>
                             <div id="txt-margin" class="text-2xl font-black text-bull">---</div>
                         </div>
-                        <button onclick="exportData()" class="action-btn action-btn-secondary !px-4 !py-3" title="导出 JSON">
-                            <i class="fas fa-download text-slate-500"></i>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -295,20 +292,6 @@
                         </div>
                     </div>
                     
-                    <!-- Challenge Section -->
-                    <div class="card p-6">
-                        <div class="card-header"><i class="fas fa-meteor text-red-500"></i> 空头压力测试</div>
-                        <div class="flex gap-3">
-                            <input type="text" id="inp-bear" placeholder="输入看空观点，如：'用户增长放缓会导致...'" class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:border-brand-500">
-                            <button id="btn-challenge" onclick="submitChallenge()" class="action-btn !bg-gradient-to-r !from-red-500 !to-orange-500">
-                                <i class="fas fa-meteor"></i>
-                            </button>
-                        </div>
-                        <div id="challenge-result" class="hidden mt-4 p-4 bg-red-50 rounded-lg border border-red-200">
-                            <p id="txt-bear-impact" class="text-sm text-bear font-bold mb-2">---</p>
-                            <p id="txt-bear-reason" class="text-xs text-slate-600">---</p>
-                        </div>
-                    </div>
                 </div>
                 
                 <!-- Right Column (1/3) -->
@@ -534,33 +517,6 @@
                 showToast(e.message, 'error'); 
             } finally {
                 setPrimaryLoading(false);
-            }
-        }
-
-        async function submitChallenge() {
-            const arg = document.getElementById('inp-bear').value;
-            if (!arg || !state.currentData) return showToast("请输入空头观点", "error");
-            
-            const btn = document.getElementById('btn-challenge');
-            btn.innerHTML = '<div class="loader w-4 h-4"></div>';
-            btn.disabled = true;
-            
-            try {
-                const res = await fetch(`${API_BASE}/challenge`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ context: state.currentData, bear_argument: arg })
-                });
-                if (!res.ok) throw new Error(await res.text());
-                const result = await res.json();
-                
-                document.getElementById('challenge-result').classList.remove('hidden');
-                document.getElementById('txt-bear-impact').innerText = result.bearish_impact || "压力测试结果";
-                document.getElementById('txt-bear-reason').innerText = result.impact_reasoning || "";
-                if (result.new_radar_scores) renderChart(result.new_radar_scores);
-            } catch (e) { showToast(e.message, 'error'); }
-            finally { 
-                btn.innerHTML = '<i class="fas fa-meteor"></i>'; 
-                btn.disabled = false;
             }
         }
 
@@ -840,11 +796,19 @@
             if (closeDrawer) document.getElementById('historyDrawer').classList.remove('open');
         }
 
-        function processImport() {
+        async function processImport() {
             try {
                 const json = JSON.parse(document.getElementById('jsonInput').value);
                 
                 if (json.ticker) document.getElementById('inp-ticker').value = json.ticker;
+                // 支持导入 JSON 自带 price（用于自动填充股价输入框）
+                if (
+                    json.price !== undefined &&
+                    json.price !== null &&
+                    !isNaN(parseFloat(json.price))
+                ) {
+                    document.getElementById("inp-price").value = parseFloat(json.price);
+                }
                 
                 const fs = json.financial_snapshot || {};
                 document.getElementById('fin-revenue').value = fs.revenue || '';
@@ -859,6 +823,43 @@
                     showToast("完整分析已导入", "success");
                 } else {
                     showToast("财报数据已导入，请点击「分析/推演」", "info");
+                }
+
+                // 导入后自动落表到 history.jsonl
+                const tickerToSave =
+                    (json && json.ticker) ||
+                    document.getElementById("inp-ticker")?.value ||
+                    "UNKNOWN";
+                // 确保 data 内也有 ticker（react 会用到）
+                if (json && !json.ticker) json.ticker = tickerToSave;
+
+                // price：优先输入框，其次导入 JSON 的 price
+                let priceVal = parseFloat(document.getElementById("inp-price")?.value || "");
+                if (isNaN(priceVal) && json && json.price !== undefined) {
+                    priceVal = parseFloat(json.price);
+                }
+
+                try {
+                    const res = await fetch(`${API_BASE}/save`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            ticker: tickerToSave || "UNKNOWN",
+                            data: json || {},
+                            price: isNaN(priceVal) ? null : priceVal,
+                            timestamp: new Date().toISOString(),
+                        }),
+                    });
+                    if (!res.ok) throw new Error(await res.text());
+
+                    // 保存成功后，强制切回“全部公司”并刷新列表，确保可见
+                    const filterEl = document.getElementById("historyFilter");
+                    if (filterEl) filterEl.value = "";
+                    await loadHistory();
+                    showToast(`已落表：${tickerToSave || "UNKNOWN"}`, "success");
+                } catch (e) {
+                    console.log("Auto-save failed:", e);
+                    showToast("导入已完成，但落表失败", "error");
                 }
                 
                 toggleImport();

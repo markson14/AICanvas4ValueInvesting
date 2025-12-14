@@ -66,48 +66,6 @@ class AIEngine:
         result = parse_llm_json(response.content)
         return normalize_history_data(result, ticker=ticker)
 
-    async def challenge(
-        self,
-        api_key: str,
-        base_url: str,
-        model_name: str,
-        context: Dict[str, Any],
-        bear_argument: str,
-    ) -> Dict[str, Any]:
-
-        template = self._load_prompt("challenge.txt")
-        format_instructions = get_json_format_instructions()
-
-        llm = ChatOpenAI(
-            model=model_name,
-            openai_api_key=api_key,
-            openai_api_base=base_url,
-            temperature=0.8,  # Higher temp for creative critique
-        )
-
-        # Extract context
-        company_name = context.get("company_name", "Unknown")
-        radar = context.get("radar_scores", {})
-        original_reasoning = context.get("reasoning_trace", "N/A")
-
-        formatted_system_prompt = template.format(
-            company_name=company_name,
-            original_moat_score=radar.get("moat", 5),
-            original_valuation_score=radar.get("valuation", 5),
-            original_reasoning=original_reasoning,
-            bear_argument=bear_argument,
-        )
-
-        messages = [
-            SystemMessage(
-                content=formatted_system_prompt + "\n\n" + format_instructions
-            ),
-            HumanMessage(content=f"空头观点: {bear_argument}. 请开始你的表演。"),
-        ]
-
-        response = await llm.ainvoke(messages)
-        return parse_llm_json(response.content)
-
     async def react_earnings(
         self,
         api_key: str,

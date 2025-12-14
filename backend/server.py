@@ -10,6 +10,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from ai_engine import AIEngine
 from utils import Storage
+from config.history_schema import normalize_history_data
 
 # Load environment variables
 load_dotenv()
@@ -51,11 +52,6 @@ class AnalyzeRequest(BaseModel):
     ticker: str
     price: float
     custom_metrics: List[Metric] = []
-
-
-class ChallengeRequest(BaseModel):
-    context: Dict[str, Any]
-    bear_argument: str
 
 
 class ReactRequest(BaseModel):
@@ -111,24 +107,6 @@ async def analyze(req: AnalyzeRequest):
         raise HTTPException(status_code=502, detail=f"AI Provider Error: {str(e)}")
 
 
-@app.post("/api/challenge")
-async def challenge(req: ChallengeRequest):
-    try:
-        api_key, base_url, model = get_env_config()
-
-        result = await engine.challenge(
-            api_key=api_key,
-            base_url=base_url,
-            model_name=model,
-            context=req.context,
-            bear_argument=req.bear_argument,
-        )
-        return result
-    except Exception as e:
-        print(f"Error in challenge: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @app.post("/api/react")
 async def react_earnings(req: ReactRequest):
     try:
@@ -176,7 +154,12 @@ def save_history(item: Dict[str, Any]):
     price = item.get("price")
     timestamp = item.get("timestamp")
 
+    if isinstance(data, dict):
+        data = normalize_history_data(data, ticker=ticker)
     storage.save(ticker=ticker, data=data, price=price, timestamp=timestamp)
+    print(
+        f"[AlphaSeeker][api_save][saved] ticker={ticker} ts={timestamp} price={price}"
+    )
     return {"status": "saved"}
 
 
