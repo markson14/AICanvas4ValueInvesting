@@ -106,6 +106,55 @@ class Storage:
         records = self.load()
         return list(set(r.get("ticker", "") for r in records if r.get("ticker")))
 
+    def save_and_replace(
+        self,
+        ticker: str,
+        data: Dict[str, Any],
+        price: Optional[float] = None,
+        timestamp: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        保存一条分析记录，并删除该ticker的所有旧记录（覆盖模式）
+        
+        Args:
+            ticker: 股票代码
+            data: 分析数据（完整的 JSON 对象）
+            price: 当前股价（可选）
+            timestamp: 时间戳（可选，默认为当前时间）
+            
+        Returns:
+            保存的完整记录
+        """
+        # 读取所有记录
+        all_records = []
+        if self.data_file.exists():
+            with open(self.data_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        try:
+                            record = json.loads(line)
+                            # 只保留不是当前ticker的记录
+                            if record.get("ticker") != ticker:
+                                all_records.append(record)
+                        except json.JSONDecodeError:
+                            continue
+        
+        # 创建新记录
+        new_record = {
+            "timestamp": timestamp or datetime.now().isoformat(),
+            "ticker": ticker,
+            "price": price,
+            "data": data,
+        }
+        
+        # 写入所有记录（旧记录 + 新记录）
+        with open(self.data_file, "w", encoding="utf-8") as f:
+            for record in all_records:
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+            f.write(json.dumps(new_record, ensure_ascii=False) + "\n")
+        
+        return new_record
+
 
 # 全局默认实例
 storage = Storage()

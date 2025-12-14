@@ -312,6 +312,7 @@
                         <div class="flex gap-2">
                             <input type="text" id="new-metric-name" placeholder="指标名称" class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-brand-500">
                             <input type="text" id="new-metric-val" placeholder="值" class="w-20 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-brand-500">
+                            <input type="text" id="new-metric-unit" placeholder="单位" class="w-16 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-brand-500">
                             <button onclick="addMetric()" class="action-btn !px-3 !py-2 text-xs">
                                 <i class="fas fa-plus"></i>
                             </button>
@@ -371,7 +372,8 @@
             currentData: null,
             chart: null,
             metrics: [],
-            editingMetricIndex: null
+            editingMetricIndex: null,
+            headerSaveTimer: null  // 防抖定时器
         };
 
         // === INIT ===
@@ -379,6 +381,9 @@
             document.getElementById('configBaseUrl').value = state.config.baseUrl;
             document.getElementById('configKey').value = state.config.apiKey;
             document.getElementById('configModel').value = state.config.model;
+            
+            // 为header字段添加防抖保存
+            setupHeaderAutoSave();
             
             const historyList = await loadHistory();
             
@@ -401,6 +406,64 @@
                 }
             }
         })();
+
+        // === HEADER AUTO SAVE ===
+        function setupHeaderAutoSave() {
+            const fields = ['inp-price', 'fin-revenue', 'fin-profit', 'fin-pe', 'fin-growth'];
+            fields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', () => {
+                        // 清除之前的定时器
+                        if (state.headerSaveTimer) {
+                            clearTimeout(state.headerSaveTimer);
+                        }
+                        // 设置新的定时器（3秒延迟）
+                        state.headerSaveTimer = setTimeout(() => {
+                            saveHeaderFields();
+                        }, 3000);
+                    });
+                }
+            });
+        }
+
+        async function saveHeaderFields() {
+            const ticker = document.getElementById('inp-ticker').value;
+            if (!ticker || !state.currentData) {
+                return; // 如果没有ticker或当前数据，不保存
+            }
+
+            try {
+                const price = parseFloat(document.getElementById('inp-price').value);
+                const financial_snapshot = {
+                    revenue: document.getElementById('fin-revenue').value || '',
+                    net_profit: document.getElementById('fin-profit').value || '',
+                    pe_ttm: document.getElementById('fin-pe').value || '',
+                    revenue_growth_yoy: document.getElementById('fin-growth').value || ''
+                };
+
+                const res = await fetch(`${API_BASE}/update-header`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        ticker: ticker,
+                        price: isNaN(price) ? null : price,
+                        financial_snapshot: financial_snapshot
+                    })
+                });
+
+                if (res.ok) {
+                    const result = await res.json();
+                    // 更新当前数据
+                    if (result.data) {
+                        state.currentData = result.data;
+                    }
+                    console.log('[AlphaSeeker][header_saved]', ticker);
+                }
+            } catch (e) {
+                console.error('Header save failed:', e);
+            }
+        }
 
         // === CORE FUNCTIONS ===
         async function runAnalysis() {
@@ -682,15 +745,22 @@
         function addMetric() {
             const name = document.getElementById('new-metric-name').value;
             const val = document.getElementById('new-metric-val').value;
+            const unit = document.getElementById('new-metric-unit').value || '';
             if (name && val) {
-                state.metrics.push({ name, current_value: val, unit: '' });
+                state.metrics.push({ name, current_value: val, unit: unit });
                 renderMetricsList();
                 document.getElementById('new-metric-name').value = '';
                 document.getElementById('new-metric-val').value = '';
+                document.getElementById('new-metric-unit').value = '';
+                saveMetrics(); // 自动保存
             }
         }
         
-        function removeMetric(i) { state.metrics.splice(i, 1); renderMetricsList(); }
+        function removeMetric(i) { 
+            state.metrics.splice(i, 1); 
+            renderMetricsList();
+            saveMetrics(); // 自动保存
+        }
         
         function editMetric(i) {
             const m = state.metrics[i];
@@ -727,6 +797,37 @@
             state.metrics[i] = { ...m, name, current_value: val, unit: unit || '' };
             state.editingMetricIndex = null;
             renderMetricsList();
+            saveMetrics(); // 自动保存
+        }
+
+        async function saveMetrics() {
+            const ticker = document.getElementById('inp-ticker').value;
+            if (!ticker || !state.currentData) {
+                return; // 如果没有ticker或当前数据，不保存
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/update-metrics`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        ticker: ticker,
+                        north_star_metrics: state.metrics
+                    })
+                });
+
+                if (res.ok) {
+                    const result = await res.json();
+                    // 更新当前数据
+                    if (result.data) {
+                        state.currentData = result.data;
+                        state.currentData.north_star_metrics = state.metrics;
+                    }
+                    console.log('[AlphaSeeker][metrics_saved]', ticker, state.metrics.length);
+                }
+            } catch (e) {
+                console.error('Metrics save failed:', e);
+            }
         }
 
         function calculateValuationDisplay(params, type, currentPrice, fairValueRange) {

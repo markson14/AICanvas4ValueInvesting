@@ -61,6 +61,17 @@ class ReactRequest(BaseModel):
     price: Optional[float] = None  # Current price for saving
 
 
+class UpdateHeaderRequest(BaseModel):
+    ticker: str
+    price: Optional[float] = None
+    financial_snapshot: Dict[str, Any]
+
+
+class UpdateMetricsRequest(BaseModel):
+    ticker: str
+    north_star_metrics: List[Dict[str, Any]]
+
+
 # --- Services ---
 
 engine = AIEngine()
@@ -95,8 +106,8 @@ async def analyze(req: AnalyzeRequest):
             custom_metrics=metrics_dict,
         )
 
-        # Auto-save analysis result with price
-        saved = storage.save(ticker=req.ticker, data=result, price=req.price)
+        # Auto-save analysis result with price (覆盖模式)
+        saved = storage.save_and_replace(ticker=req.ticker, data=result, price=req.price)
         print(
             f"[AlphaSeeker][api_analyze][saved] ticker={req.ticker} ts={saved.get('timestamp')} price={req.price}"
         )
@@ -128,9 +139,9 @@ async def react_earnings(req: ReactRequest):
             north_star_metrics=metrics_dict,
         )
 
-        # Auto-save react result with price
+        # Auto-save react result with price (覆盖模式)
         ticker = result.get("ticker") or req.old_context.get("ticker", "UNKNOWN")
-        saved = storage.save(ticker=ticker, data=result, price=req.price)
+        saved = storage.save_and_replace(ticker=ticker, data=result, price=req.price)
         print(
             f"[AlphaSeeker][api_react][saved] ticker={ticker} ts={saved.get('timestamp')} price={req.price}"
         )
@@ -161,6 +172,82 @@ def save_history(item: Dict[str, Any]):
         f"[AlphaSeeker][api_save][saved] ticker={ticker} ts={timestamp} price={price}"
     )
     return {"status": "saved"}
+
+
+@app.post("/api/update-header")
+def update_header(req: UpdateHeaderRequest):
+    """更新header字段（股价、营收、净利润、PE、增长率）"""
+    try:
+        # 获取最新记录
+        latest = storage.get_latest(req.ticker)
+        if not latest:
+            raise HTTPException(status_code=404, detail=f"未找到ticker {req.ticker} 的记录")
+        
+        # 更新数据
+        data = latest.get("data", {})
+        if not isinstance(data, dict):
+            data = {}
+        
+        # 更新financial_snapshot
+        if "financial_snapshot" not in data:
+            data["financial_snapshot"] = {}
+        data["financial_snapshot"].update(req.financial_snapshot)
+        
+        # 确保数据格式正确
+        data = normalize_history_data(data, ticker=req.ticker)
+        
+        # 使用覆盖模式保存
+        saved = storage.save_and_replace(
+            ticker=req.ticker,
+            data=data,
+            price=req.price if req.price is not None else latest.get("price")
+        )
+        print(
+            f"[AlphaSeeker][api_update_header][saved] ticker={req.ticker} price={req.price}"
+        )
+        return {"status": "updated", "data": saved.get("data")}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in update_header: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/update-metrics")
+def update_metrics(req: UpdateMetricsRequest):
+    """更新北极星指标"""
+    try:
+        # 获取最新记录
+        latest = storage.get_latest(req.ticker)
+        if not latest:
+            raise HTTPException(status_code=404, detail=f"未找到ticker {req.ticker} 的记录")
+        
+        # 更新数据
+        data = latest.get("data", {})
+        if not isinstance(data, dict):
+            data = {}
+        
+        # 更新north_star_metrics
+        data["north_star_metrics"] = req.north_star_metrics
+        
+        # 确保数据格式正确
+        data = normalize_history_data(data, ticker=req.ticker)
+        
+        # 使用覆盖模式保存
+        saved = storage.save_and_replace(
+            ticker=req.ticker,
+            data=data,
+            price=latest.get("price")
+        )
+        print(
+            f"[AlphaSeeker][api_update_metrics][saved] ticker={req.ticker} metrics_count={len(req.north_star_metrics)}"
+        )
+        return {"status": "updated", "data": saved.get("data")}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in update_metrics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # --- Static Files ---
