@@ -12,71 +12,75 @@
             theme: {
                 extend: {
                     colors: {
-                        brand: { 50: '#faf5ff', 100: '#f3e8ff', 500: '#a855f7', 600: '#9333ea', 900: '#581c87' },
-                        bull: '#22c55e',
-                        bear: '#ef4444',
-                        hold: '#f59e0b'
+                        brand: { 50: '#faf5ff', 100: '#f3e8ff', 200: '#e9d5ff', 500: '#a855f7', 600: '#9333ea', 700: '#7c3aed', 900: '#581c87' },
+                        bull: '#16a34a',
+                        bear: '#dc2626',
+                        hold: '#d97706'
                     }
                 }
             }
         }
     </script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0f0f23 100%); min-height: 100vh; color: #e2e8f0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f8fafc; min-height: 100vh; color: #1e293b; }
         
         /* Header Inputs */
-        .header-input { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 6px 10px; font-weight: 600; font-size: 0.85rem; color: #fff; transition: all 0.2s; width: 100%; }
-        .header-input:focus { outline: none; border-color: #a855f7; background: rgba(168,85,247,0.1); box-shadow: 0 0 0 2px rgba(168,85,247,0.2); }
-        .header-label { font-size: 0.65rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; display: block; }
+        .header-input { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 10px; font-weight: 600; font-size: 0.85rem; color: #334155; transition: all 0.2s; width: 100%; }
+        .header-input:focus { outline: none; border-color: #a855f7; background: #fff; box-shadow: 0 0 0 3px rgba(168,85,247,0.15); }
+        .header-label { font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; display: block; }
         
         /* Cards */
-        .card { background: rgba(255,255,255,0.03); border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(10px); }
-        .card-header { font-size: 0.75rem; font-weight: 800; color: #a855f7; text-transform: uppercase; letter-spacing: 0.1em; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .card-header { font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; padding-bottom: 0.75rem; border-bottom: 1px solid #f1f5f9; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .card-header i { color: #a855f7; }
         
         /* Verdict Badges */
-        .verdict-badge { font-size: 0.6rem; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
-        .verdict-buy { background: #22c55e; color: white; }
-        .verdict-hold { background: #f59e0b; color: white; }
-        .verdict-reject { background: #ef4444; color: white; }
+        .verdict-badge { font-size: 0.7rem; font-weight: 800; padding: 4px 12px; border-radius: 6px; text-transform: uppercase; }
+        .verdict-buy { background: #dcfce7; color: #15803d; }
+        .verdict-hold { background: #fef3c7; color: #b45309; }
+        .verdict-reject { background: #fee2e2; color: #b91c1c; }
         
         /* Loader */
-        .loader { border: 2px solid rgba(255,255,255,0.1); border-top-color: #a855f7; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .loader { border: 2px solid #e2e8f0; border-top-color: #a855f7; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
         /* Toast */
-        .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 10px; font-weight: 600; font-size: 0.85rem; z-index: 1000; animation: slideIn 0.3s ease-out; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
-        .toast-success { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
-        .toast-error { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
-        .toast-info { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+        .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 10px; font-weight: 600; font-size: 0.85rem; z-index: 1000; animation: slideIn 0.3s ease-out; box-shadow: 0 10px 40px rgba(0,0,0,0.15); }
+        .toast-success { background: #16a34a; color: white; }
+        .toast-error { background: #dc2626; color: white; }
+        .toast-info { background: #2563eb; color: white; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         
         /* Left Drawer */
-        .drawer { position: fixed; top: 0; left: -360px; width: 340px; height: 100vh; background: rgba(15,15,35,0.98); border-right: 1px solid rgba(255,255,255,0.1); z-index: 100; transition: left 0.3s ease-in-out; padding: 20px; overflow-y: auto; backdrop-filter: blur(20px); }
+        .drawer { position: fixed; top: 0; left: -340px; width: 320px; height: 100vh; background: #fff; border-right: 1px solid #e2e8f0; z-index: 100; transition: left 0.3s ease-in-out; padding: 20px; overflow-y: auto; box-shadow: 4px 0 15px rgba(0,0,0,0.05); }
         .drawer.open { left: 0; }
-        .drawer-toggle { position: fixed; top: 100px; left: 12px; z-index: 101; background: rgba(168,85,247,0.9); color: white; border: none; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; box-shadow: 0 4px 15px rgba(168,85,247,0.3); }
-        .drawer-toggle:hover { background: #a855f7; transform: scale(1.05); }
-        .drawer.open + .drawer-toggle { left: 352px; }
+        .drawer-toggle { position: fixed; top: 100px; left: 12px; z-index: 101; background: #a855f7; color: white; border: none; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; box-shadow: 0 4px 12px rgba(168,85,247,0.3); }
+        .drawer-toggle:hover { background: #9333ea; transform: scale(1.05); }
+        .drawer.open + .drawer-toggle { left: 332px; }
         
         /* Action Buttons */
         .action-btn { background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
-        .action-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(168,85,247,0.4); }
+        .action-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(168,85,247,0.35); }
         .action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .action-btn-secondary { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); }
-        .action-btn-secondary:hover { background: rgba(255,255,255,0.12); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+        .action-btn-secondary { background: #fff; border: 1px solid #e2e8f0; color: #475569; }
+        .action-btn-secondary:hover { background: #f8fafc; border-color: #a855f7; color: #7c3aed; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         
         /* Master Card */
-        .master-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; transition: all 0.2s; }
-        .master-card:hover { background: rgba(255,255,255,0.04); border-color: rgba(168,85,247,0.3); }
+        .master-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; transition: all 0.2s; }
+        .master-card:hover { background: #fff; border-color: #a855f7; box-shadow: 0 4px 12px rgba(168,85,247,0.1); }
         
         /* Modal */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 200; display: none; align-items: center; justify-content: center; }
-        .modal-content { background: #1a1a3e; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 200; display: none; align-items: center; justify-content: center; }
+        .modal-content { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.15); }
         
         /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
-        ::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.3); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(168,85,247,0.5); }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a855f7; }
+        
+        /* Hero Stats */
+        .stat-card { background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border: 1px solid #e9d5ff; border-radius: 12px; padding: 16px 20px; }
     </style>
 </head>
 <body class="pb-16">
@@ -84,14 +88,14 @@
     <!-- Left History Drawer -->
     <div id="historyDrawer" class="drawer">
         <div class="flex justify-between items-center mb-6">
-            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                 <i class="fas fa-clock-rotate-left text-brand-500"></i> 分析档案
             </h3>
-            <button onclick="toggleHistory()" class="text-gray-400 hover:text-white">
+            <button onclick="toggleHistory()" class="text-slate-400 hover:text-slate-600">
                 <i class="fas fa-xmark text-lg"></i>
             </button>
         </div>
-        <select id="historyFilter" onchange="loadHistory()" class="w-full mb-4 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+        <select id="historyFilter" onchange="loadHistory()" class="w-full mb-4 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-brand-500">
             <option value="">全部公司</option>
         </select>
         <div id="historyList" class="space-y-3"></div>
@@ -101,13 +105,13 @@
     </button>
 
     <!-- Sticky Header -->
-    <header class="fixed top-0 w-full bg-black/40 backdrop-blur-xl border-b border-white/10 z-50">
+    <header class="fixed top-0 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 z-50 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 py-3">
             <div class="flex flex-col lg:flex-row items-center justify-between gap-4">
                 
                 <!-- Logo & Ticker Input -->
                 <div class="flex items-center gap-4 min-w-[280px]">
-                    <div class="w-10 h-10 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center text-xl font-black text-white shadow-lg shadow-brand-500/30">α</div>
+                    <div class="w-10 h-10 bg-gradient-to-br from-brand-500 to-brand-700 rounded-xl flex items-center justify-center text-xl font-black text-white shadow-lg shadow-brand-500/20">α</div>
                     <div class="flex gap-2">
                         <div class="w-28">
                             <label class="header-label">股票代码</label>
@@ -115,7 +119,7 @@
                         </div>
                         <div class="w-24">
                             <label class="header-label">当前股价</label>
-                            <input type="number" id="inp-price" placeholder="100" step="0.1" class="header-input text-green-400">
+                            <input type="number" id="inp-price" placeholder="100" step="0.1" class="header-input !text-bull">
                         </div>
                     </div>
                 </div>
@@ -143,16 +147,13 @@
                 <!-- Action Buttons -->
                 <div class="flex items-center gap-2">
                     <button id="btn-analyze" onclick="runAnalysis()" class="action-btn">
-                        <i class="fas fa-brain"></i> 分析
-                    </button>
-                    <button id="btn-react" onclick="triggerReact()" class="action-btn action-btn-secondary">
-                        <i class="fas fa-bolt"></i> ReAct
+                        <i class="fas fa-brain"></i> 分析/推演
                     </button>
                     <button onclick="toggleConfig()" class="action-btn action-btn-secondary !px-3">
-                        <i class="fas fa-gear"></i>
+                        <i class="fas fa-gear text-slate-500"></i>
                     </button>
                     <button onclick="toggleImport()" class="action-btn action-btn-secondary !px-3">
-                        <i class="fas fa-file-import"></i>
+                        <i class="fas fa-file-import text-slate-500"></i>
                     </button>
                 </div>
             </div>
@@ -164,15 +165,15 @@
         
         <!-- Empty State -->
         <div id="emptyState" class="text-center py-20">
-            <div class="text-6xl mb-6 opacity-30">📊</div>
-            <h2 class="text-2xl font-bold text-white/60 mb-2">欢迎使用 AlphaSeeker</h2>
-            <p class="text-gray-500 mb-8">输入股票代码和价格，点击「分析」开始智能估值</p>
+            <div class="text-6xl mb-6">📊</div>
+            <h2 class="text-2xl font-bold text-slate-400 mb-2">欢迎使用 AlphaSeeker</h2>
+            <p class="text-slate-500 mb-8">输入股票代码和价格，点击「分析」开始智能估值</p>
             <div class="flex justify-center gap-4">
                 <button onclick="document.getElementById('inp-ticker').focus()" class="action-btn">
                     <i class="fas fa-rocket"></i> 开始分析
                 </button>
                 <button onclick="toggleImport()" class="action-btn action-btn-secondary">
-                    <i class="fas fa-file-import"></i> 导入 JSON
+                    <i class="fas fa-file-import text-brand-500"></i> 导入 JSON
                 </button>
             </div>
         </div>
@@ -180,52 +181,53 @@
         <!-- Dashboard (Hidden by default) -->
         <div id="dashboard" class="hidden space-y-6">
             
-            <!-- Company Header -->
-            <div class="card p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 id="company-name" class="text-2xl font-black text-white">---</h1>
-                    <p id="txt-react-summary" class="text-sm text-gray-400 mt-1"></p>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="text-center">
-                        <div class="text-xs text-gray-500 uppercase font-bold">公允价值</div>
-                        <div id="txt-fair-value" class="text-xl font-black text-brand-500">---</div>
+            <!-- Hero Section: Company + Key Stats -->
+            <div class="card p-6">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h1 id="company-name" class="text-2xl font-black text-slate-900">---</h1>
+                            <span id="txt-verdict" class="verdict-badge verdict-hold">HOLD</span>
+                        </div>
+                        <p id="txt-react-summary" class="text-sm text-slate-500"></p>
                     </div>
-                    <div class="text-center">
-                        <div class="text-xs text-gray-500 uppercase font-bold">安全边际</div>
-                        <div id="txt-margin" class="text-xl font-black text-bull">---</div>
+                    <div class="flex items-center gap-4">
+                        <div class="stat-card text-center min-w-[100px]">
+                            <div class="text-xs text-brand-600 uppercase font-bold mb-1">公允价值</div>
+                            <div id="txt-fair-value" class="text-2xl font-black text-brand-700">---</div>
+                        </div>
+                        <div class="stat-card text-center min-w-[100px]">
+                            <div class="text-xs text-brand-600 uppercase font-bold mb-1">安全边际</div>
+                            <div id="txt-margin" class="text-2xl font-black text-bull">---</div>
+                        </div>
+                        <button onclick="exportData()" class="action-btn action-btn-secondary !px-4 !py-3" title="导出 JSON">
+                            <i class="fas fa-download text-slate-500"></i>
+                        </button>
                     </div>
-                    <div id="txt-verdict" class="verdict-badge verdict-hold">HOLD</div>
                 </div>
             </div>
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                <!-- Left Column -->
+                <!-- Left Column (2/3) -->
                 <div class="lg:col-span-2 space-y-6">
                     
-                    <!-- Business Model -->
+                    <!-- Business Model + Moat (Combined) -->
                     <div class="card p-6">
-                        <div class="card-header"><i class="fas fa-building"></i> 生意模式</div>
-                        <p id="txt-business-summary" class="text-sm text-gray-300 leading-relaxed mb-4">---</p>
-                        <div class="flex flex-wrap gap-2 mb-4" id="txt-revenue-streams"></div>
-                        <p id="txt-competitive-position" class="text-xs text-gray-500">---</p>
-                    </div>
-                    
-                    <!-- Moat Analysis -->
-                    <div class="card p-6">
-                        <div class="card-header"><i class="fas fa-shield-halved"></i> 护城河诊断</div>
-                        <div class="flex flex-col md:flex-row gap-6">
-                            <div class="flex-1 space-y-3">
-                                <div class="flex items-center gap-3">
-                                    <span id="txt-moat-type" class="text-sm font-bold text-brand-400">---</span>
-                                    <span id="txt-moat-strength" class="text-xs text-gray-500">---</span>
-                                </div>
-                                <p id="txt-moat-desc" class="text-sm text-gray-300 leading-relaxed">---</p>
-                                <p id="txt-moat-risks" class="text-xs text-red-400/80 bg-red-500/10 p-3 rounded-lg">---</p>
+                        <div class="card-header"><i class="fas fa-building"></i> 生意模式与护城河</div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-4">
+                                <p id="txt-business-summary" class="text-sm text-slate-600 leading-relaxed">---</p>
+                                <div class="flex flex-wrap gap-2" id="txt-revenue-streams"></div>
+                                <p id="txt-competitive-position" class="text-xs text-slate-400">---</p>
                             </div>
-                            <div class="w-full md:w-48 h-48">
-                                <canvas id="radarChart"></canvas>
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-3">
+                                    <span id="txt-moat-type" class="text-sm font-bold text-brand-600">---</span>
+                                    <span id="txt-moat-strength" class="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded">---</span>
+                                </div>
+                                <p id="txt-moat-desc" class="text-sm text-slate-600 leading-relaxed">---</p>
+                                <p id="txt-moat-risks" class="text-xs text-bear bg-red-50 p-3 rounded-lg border border-red-100">---</p>
                             </div>
                         </div>
                     </div>
@@ -237,108 +239,98 @@
                             <!-- Buffett -->
                             <div class="master-card">
                                 <div class="flex items-center justify-between mb-3">
-                                    <span class="text-xl">🧙‍♂️</span>
+                                    <span class="text-2xl">🧙‍♂️</span>
                                     <span id="verdict-buffett" class="verdict-badge verdict-hold">HOLD</span>
                                 </div>
-                                <h4 class="text-sm font-bold text-white mb-2">巴菲特</h4>
-                                <p id="txt-buffett-quote" class="text-xs text-gray-400 italic mb-2">"---"</p>
-                                <p id="txt-buffett-reason" class="text-xs text-gray-500">---</p>
+                                <h4 class="text-sm font-bold text-slate-800 mb-2">巴菲特</h4>
+                                <p id="txt-buffett-quote" class="text-xs text-slate-500 italic mb-2">"---"</p>
+                                <p id="txt-buffett-reason" class="text-xs text-slate-400">---</p>
                             </div>
                             <!-- Munger -->
                             <div class="master-card">
                                 <div class="flex items-center justify-between mb-3">
-                                    <span class="text-xl">🧠</span>
+                                    <span class="text-2xl">🧠</span>
                                     <span id="verdict-munger" class="verdict-badge verdict-hold">HOLD</span>
                                 </div>
-                                <h4 class="text-sm font-bold text-white mb-2">芒格</h4>
-                                <p id="txt-munger-quote" class="text-xs text-gray-400 italic mb-2">"---"</p>
-                                <p id="txt-munger-reason" class="text-xs text-gray-500">---</p>
+                                <h4 class="text-sm font-bold text-slate-800 mb-2">芒格</h4>
+                                <p id="txt-munger-quote" class="text-xs text-slate-500 italic mb-2">"---"</p>
+                                <p id="txt-munger-reason" class="text-xs text-slate-400">---</p>
                             </div>
                             <!-- Duan -->
                             <div class="master-card">
                                 <div class="flex items-center justify-between mb-3">
-                                    <span class="text-xl">🧘‍♂️</span>
+                                    <span class="text-2xl">🧘‍♂️</span>
                                     <span id="verdict-duan" class="verdict-badge verdict-hold">HOLD</span>
                                 </div>
-                                <h4 class="text-sm font-bold text-white mb-2">段永平</h4>
-                                <p id="txt-duan-quote" class="text-xs text-gray-400 italic mb-2">"---"</p>
-                                <p id="txt-duan-reason" class="text-xs text-gray-500">---</p>
+                                <h4 class="text-sm font-bold text-slate-800 mb-2">段永平</h4>
+                                <p id="txt-duan-quote" class="text-xs text-slate-500 italic mb-2">"---"</p>
+                                <p id="txt-duan-reason" class="text-xs text-slate-400">---</p>
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Valuation -->
                     <div class="card p-6">
-                        <div class="card-header"><i class="fas fa-calculator"></i> 估值模型 <span id="txt-model-type" class="ml-2 text-brand-500">---</span></div>
-                        <div class="space-y-4">
+                        <div class="card-header"><i class="fas fa-calculator"></i> 估值模型 <span id="txt-model-type" class="ml-2 text-brand-600 bg-brand-50 px-2 py-0.5 rounded">---</span></div>
+                        <div class="space-y-3 text-sm">
                             <div>
-                                <label class="text-xs text-gray-500 uppercase font-bold">模型选择理由</label>
-                                <p id="txt-val-model-reason" class="text-sm text-gray-300 mt-1">---</p>
+                                <label class="text-xs text-slate-400 uppercase font-bold">模型选择理由</label>
+                                <p id="txt-val-model-reason" class="text-slate-600 mt-1">---</p>
                             </div>
                             <div>
-                                <label class="text-xs text-gray-500 uppercase font-bold">关键假设</label>
-                                <p id="txt-val-assumptions" class="text-sm text-gray-300 mt-1">---</p>
+                                <label class="text-xs text-slate-400 uppercase font-bold">关键假设</label>
+                                <p id="txt-val-assumptions" class="text-slate-600 mt-1">---</p>
                             </div>
                             <div>
-                                <label class="text-xs text-gray-500 uppercase font-bold">计算步骤</label>
-                                <p id="txt-val-steps" class="text-sm text-gray-300 mt-1">---</p>
-                            </div>
-                            <div>
-                                <label class="text-xs text-gray-500 uppercase font-bold">估值参数</label>
-                                <pre id="txt-val-params" class="text-xs text-brand-400 bg-black/30 p-3 rounded-lg mt-1 overflow-x-auto">---</pre>
+                                <label class="text-xs text-slate-400 uppercase font-bold">估值参数</label>
+                                <pre id="txt-val-params" class="text-xs text-brand-600 bg-slate-50 p-3 rounded-lg mt-1 overflow-x-auto border border-slate-100">---</pre>
                             </div>
                         </div>
-                        
                         <!-- Reasoning Trace (Collapsible) -->
-                        <div class="mt-4 pt-4 border-t border-white/10">
-                            <button onclick="toggleTrace()" class="text-xs text-gray-500 hover:text-gray-300 flex items-center gap-2">
+                        <div class="mt-4 pt-4 border-t border-slate-100">
+                            <button onclick="toggleTrace()" class="text-xs text-slate-400 hover:text-brand-600 flex items-center gap-2">
                                 <i id="icon-trace" class="fas fa-chevron-down"></i> 完整推理过程
                             </button>
-                            <p id="txt-reasoning" class="hidden text-xs text-gray-500 mt-3 whitespace-pre-wrap bg-black/20 p-3 rounded-lg">---</p>
+                            <p id="txt-reasoning" class="hidden text-xs text-slate-500 mt-3 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg border border-slate-100">---</p>
                         </div>
                     </div>
                     
                     <!-- Challenge Section -->
                     <div class="card p-6">
-                        <div class="card-header"><i class="fas fa-meteor text-red-400"></i> 空头压力测试</div>
+                        <div class="card-header"><i class="fas fa-meteor text-red-500"></i> 空头压力测试</div>
                         <div class="flex gap-3">
-                            <input type="text" id="inp-bear" placeholder="输入看空观点，如：'用户增长放缓会导致...'" class="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-gray-500">
+                            <input type="text" id="inp-bear" placeholder="输入看空观点，如：'用户增长放缓会导致...'" class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:border-brand-500">
                             <button id="btn-challenge" onclick="submitChallenge()" class="action-btn !bg-gradient-to-r !from-red-500 !to-orange-500">
                                 <i class="fas fa-meteor"></i>
                             </button>
                         </div>
-                        <div id="challenge-result" class="hidden mt-4 p-4 bg-red-500/10 rounded-lg border border-red-500/20">
-                            <p id="txt-bear-impact" class="text-sm text-red-400 font-bold mb-2">---</p>
-                            <p id="txt-bear-reason" class="text-xs text-gray-400">---</p>
+                        <div id="challenge-result" class="hidden mt-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                            <p id="txt-bear-impact" class="text-sm text-bear font-bold mb-2">---</p>
+                            <p id="txt-bear-reason" class="text-xs text-slate-600">---</p>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Right Column -->
+                <!-- Right Column (1/3) -->
                 <div class="space-y-6">
                     
-                    <!-- North Star Metrics -->
+                    <!-- Radar Chart -->
                     <div class="card p-6">
-                        <div class="card-header"><i class="fas fa-star text-yellow-400"></i> 北极星指标</div>
-                        <div id="metrics-container" class="space-y-3 mb-4"></div>
-                        <div class="flex gap-2">
-                            <input type="text" id="new-metric-name" placeholder="指标名称" class="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white">
-                            <input type="text" id="new-metric-val" placeholder="值" class="w-20 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white">
-                            <button onclick="addMetric()" class="action-btn !px-3 !py-2 text-xs">
-                                <i class="fas fa-plus"></i>
-                            </button>
+                        <div class="card-header"><i class="fas fa-chart-radar"></i> 综合评分</div>
+                        <div class="h-52">
+                            <canvas id="radarChart"></canvas>
                         </div>
                     </div>
                     
-                    <!-- Quick Actions -->
+                    <!-- North Star Metrics -->
                     <div class="card p-6">
-                        <div class="card-header"><i class="fas fa-bolt"></i> 快捷操作</div>
-                        <div class="space-y-3">
-                            <button onclick="saveCurrentAnalysis()" class="w-full action-btn action-btn-secondary justify-center">
-                                <i class="fas fa-floppy-disk"></i> 保存当前分析
-                            </button>
-                            <button onclick="exportData()" class="w-full action-btn action-btn-secondary justify-center">
-                                <i class="fas fa-download"></i> 导出 JSON
+                        <div class="card-header"><i class="fas fa-star text-amber-500"></i> 北极星指标</div>
+                        <div id="metrics-container" class="space-y-2 mb-4"></div>
+                        <div class="flex gap-2">
+                            <input type="text" id="new-metric-name" placeholder="指标名称" class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-brand-500">
+                            <input type="text" id="new-metric-val" placeholder="值" class="w-20 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-brand-500">
+                            <button onclick="addMetric()" class="action-btn !px-3 !py-2 text-xs">
+                                <i class="fas fa-plus"></i>
                             </button>
                         </div>
                     </div>
@@ -351,21 +343,21 @@
     <div id="configModal" class="modal-overlay">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-bold text-white">API 配置</h3>
-                <button onclick="toggleConfig()" class="text-gray-400 hover:text-white"><i class="fas fa-xmark"></i></button>
+                <h3 class="text-lg font-bold text-slate-800">API 配置</h3>
+                <button onclick="toggleConfig()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-xmark"></i></button>
             </div>
             <div class="space-y-4">
                 <div>
                     <label class="header-label">Base URL</label>
-                    <input type="text" id="configBaseUrl" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                    <input type="text" id="configBaseUrl" class="w-full header-input">
                 </div>
                 <div>
                     <label class="header-label">API Key</label>
-                    <input type="password" id="configKey" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                    <input type="password" id="configKey" class="w-full header-input">
                 </div>
                 <div>
                     <label class="header-label">Model</label>
-                    <input type="text" id="configModel" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                    <input type="text" id="configModel" class="w-full header-input">
                 </div>
                 <button onclick="saveConfig()" class="w-full action-btn justify-center">保存配置</button>
             </div>
@@ -376,10 +368,10 @@
     <div id="importModal" class="modal-overlay">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-bold text-white">导入分析数据</h3>
-                <button onclick="toggleImport()" class="text-gray-400 hover:text-white"><i class="fas fa-xmark"></i></button>
+                <h3 class="text-lg font-bold text-slate-800">导入分析数据</h3>
+                <button onclick="toggleImport()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-xmark"></i></button>
             </div>
-            <textarea id="jsonInput" rows="12" placeholder="粘贴 JSON 数据..." class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono resize-none mb-4"></textarea>
+            <textarea id="jsonInput" rows="12" placeholder="粘贴 JSON 数据..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 font-mono resize-none mb-4 focus:outline-none focus:border-brand-500"></textarea>
             <button onclick="processImport()" class="w-full action-btn justify-center">导入并渲染</button>
         </div>
     </div>
@@ -395,7 +387,8 @@
             },
             currentData: null,
             chart: null,
-            metrics: []
+            metrics: [],
+            editingMetricIndex: null
         };
 
         // === INIT ===
@@ -432,8 +425,22 @@
             const price = parseFloat(document.getElementById('inp-price').value);
             if (!ticker || isNaN(price)) return showToast('请输入有效信息', 'error');
 
-            setLoading('analyze', true);
+            setPrimaryLoading(true, '处理中...');
             try {
+                // 先按 ticker 判断是否存在历史：无则走 /analyze，有则走 /react
+                let history = [];
+                try {
+                    const historyRes = await fetch(`${API_BASE}/history?ticker=${encodeURIComponent(ticker)}`);
+                    if (historyRes.ok) history = await historyRes.json();
+                } catch (e) {
+                    console.log('[AlphaSeeker][history_fetch_failed]', { ticker, err: String(e), ts: new Date().toISOString() });
+                }
+
+                const hasHistory = Array.isArray(history) && history.length > 0;
+                console.log('[AlphaSeeker][click_analyze_or_react]', { ticker, hasHistory, ts: new Date().toISOString() });
+
+                if (!hasHistory) {
+                    setPrimaryLoading(true, '分析中...');
                 const payload = { ticker, price, custom_metrics: state.metrics };
                 const res = await fetch(`${API_BASE}/analyze`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
@@ -445,15 +452,52 @@
                 state.metrics = data.north_star_metrics || [];
                 renderDashboard(data, price);
                 showToast("分析完成", "success");
+                } else {
+                    setPrimaryLoading(true, '推演中...');
+                    const latest = history[0];
+                    const oldContext = latest?.data || null;
+                    if (!oldContext) throw new Error('历史记录缺少 data，无法推演');
+
+                    const snapshot = {
+                        metrics: {
+                            revenue: document.getElementById('fin-revenue').value,
+                            net_profit: document.getElementById('fin-profit').value,
+                            pe_ttm: document.getElementById('fin-pe').value,
+                            revenue_growth_yoy: document.getElementById('fin-growth').value
+                        },
+                        period: "Latest"
+                    };
+
+                    const res = await fetch(`${API_BASE}/react`, {
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            old_context: oldContext,
+                            financial_snapshot: snapshot,
+                            custom_metrics: state.metrics,
+                            price: isNaN(price) ? null : price
+                        })
+                    });
+                    if (!res.ok) throw new Error(await res.text());
+                    const result = await res.json();
+                    state.currentData = result;
+                    state.metrics = result.north_star_metrics || [];
+                    renderDashboard(state.currentData, price);
+                    showToast("推演完成", "success");
+                }
+
+                // 成功后刷新历史列表，确保落表可见
+                try { await loadHistory(); } catch (e) {}
             } catch (e) { showToast(e.message, 'error'); } 
-            finally { setLoading('analyze', false); }
+            finally { setPrimaryLoading(false); }
         }
 
         async function triggerReact() {
             if (!state.currentData) return showToast("请先进行基础分析", "error");
             
-            setLoading('react', true);
+            setPrimaryLoading(true, '推演中...');
             showToast("正在进行 ReAct 推演...", "info");
+
+            const price = parseFloat(document.getElementById('inp-price').value);
             
             const snapshot = {
                 metrics: {
@@ -471,31 +515,25 @@
                     body: JSON.stringify({ 
                         old_context: state.currentData, 
                         financial_snapshot: snapshot,
-                        custom_metrics: state.metrics 
+                        custom_metrics: state.metrics,
+                        price: isNaN(price) ? null : price
                     })
                 });
                 
                 if (!res.ok) throw new Error(await res.text());
                 const result = await res.json();
                 
-                // Update state with merged results
-                state.currentData.radar_scores = result.new_radar_scores;
-                state.currentData.analysis_normal = result.new_analysis_normal;
-                state.currentData.master_views = result.master_views;
-                state.currentData.valuation_type = result.valuation_type;
-                state.currentData.valuation_explanation = result.valuation_explanation;
-                state.currentData.valuation_params = result.valuation_params;
-                state.currentData.react_summary = result.react_summary;
-                state.currentData.valuation_verdict = result.valuation_verdict;
-                state.currentData.fair_value_range = result.fair_value_range;
+                // Backend now returns complete merged data, just use it directly
+                state.currentData = result;
+                state.metrics = result.north_star_metrics || [];
                 
                 renderDashboard(state.currentData, parseFloat(document.getElementById('inp-price').value));
-                showToast("ReAct 推演完成：估值与观点已更新", "success");
+                showToast("ReAct 推演完成", "success");
                 
             } catch (e) { 
                 showToast(e.message, 'error'); 
             } finally {
-                setLoading('react', false);
+                setPrimaryLoading(false);
             }
         }
 
@@ -526,19 +564,6 @@
             }
         }
 
-        async function saveCurrentAnalysis() {
-            if (!state.currentData) return showToast("暂无数据可保存", "error");
-            try {
-                const dataToSave = { ...state.currentData, financial_snapshot: getFinancialSnapshot() };
-                await fetch(`${API_BASE}/save`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ ticker: document.getElementById('inp-ticker').value, data: dataToSave })
-                });
-                showToast("已保存", "success"); 
-                loadHistory();
-            } catch (e) { showToast("保存失败", 'error'); }
-        }
-
         async function loadHistory() {
             try {
                 const filter = document.getElementById('historyFilter').value;
@@ -556,13 +581,13 @@
 
                 const container = document.getElementById('historyList');
                 container.innerHTML = history.map(item => `
-                    <div class="bg-white/5 p-3 rounded-lg cursor-pointer hover:bg-white/10 border border-white/5 transition-all" onclick='restoreData(${JSON.stringify(item).replace(/'/g, "&#39;")})'>
-                        <div class="flex justify-between font-bold text-sm text-white">
+                    <div class="bg-slate-50 p-3 rounded-lg cursor-pointer hover:bg-brand-50 border border-slate-100 hover:border-brand-200 transition-all" onclick='restoreData(${JSON.stringify(item).replace(/'/g, "&#39;")})'>
+                        <div class="flex justify-between font-bold text-sm text-slate-800">
                             <span>${item.ticker}</span>
-                            <span class="text-xs text-gray-500">${new Date(item.timestamp).toLocaleDateString()}</span>
+                            <span class="text-xs text-slate-400">${new Date(item.timestamp).toLocaleDateString()}</span>
                         </div>
-                        <div class="text-xs text-gray-400 mt-1 truncate">${item.data?.company_name || '---'}</div>
-                        ${item.type === 'react_update' ? '<span class="text-[9px] bg-brand-500/20 text-brand-400 px-1.5 py-0.5 rounded mt-1 inline-block">ReAct</span>' : ''}
+                        <div class="text-xs text-slate-500 mt-1 truncate">${item.data?.company_name || '---'}</div>
+                        ${item.price !== undefined && item.price !== null ? `<div class="text-[11px] text-slate-400 mt-1">股价：${item.price}</div>` : ''}
                     </div>
                 `).join('');
                 
@@ -585,7 +610,7 @@
             // Business Model
             const bm = data.business_model || {};
             document.getElementById('txt-business-summary').innerText = bm.summary || data.analysis_normal?.essence || data.analysis_normal?.business_essence || '---';
-            document.getElementById('txt-revenue-streams').innerHTML = (bm.revenue_streams || []).map(s => `<span class="bg-brand-500/20 text-brand-400 px-2 py-1 rounded text-xs">${s}</span>`).join('') || '';
+            document.getElementById('txt-revenue-streams').innerHTML = (bm.revenue_streams || []).map(s => `<span class="bg-brand-100 text-brand-700 px-2 py-1 rounded text-xs font-medium">${s}</span>`).join('') || '';
             document.getElementById('txt-competitive-position').innerText = bm.competitive_position || '';
 
             // Moat
@@ -606,7 +631,6 @@
             const valExp = data.valuation_explanation || {};
             document.getElementById('txt-val-model-reason').innerText = valExp.model_choice_reason || '---';
             document.getElementById('txt-val-assumptions').innerText = valExp.key_assumptions || '---';
-            document.getElementById('txt-val-steps').innerText = valExp.calculation_steps || '---';
             document.getElementById('txt-val-params').innerText = JSON.stringify(data.valuation_params || {}, null, 2);
             document.getElementById('txt-reasoning').innerText = data.reasoning_trace || data.valuation_adjustment_reasoning || data.verdict_reasoning || "";
 
@@ -630,7 +654,7 @@
                 const key = id === 'duan' ? 'duanyongping_quote' : `${id}_quote`;
                 quoteEl.innerText = `"${fallback[key] || '---'}"`;
                 verdictEl.innerText = 'N/A';
-                verdictEl.className = 'verdict-badge bg-gray-600 text-white';
+                verdictEl.className = 'verdict-badge bg-slate-200 text-slate-600';
                 reasonEl.innerText = '';
             }
         }
@@ -645,14 +669,16 @@
                     labels: ['护城河', '管理层', '财务', '增长', '估值'],
                     datasets: [{
                         data: [scores.moat, scores.management, scores.financials, scores.growth, scores.valuation],
-                        backgroundColor: 'rgba(168, 85, 247, 0.2)',
+                        backgroundColor: 'rgba(168, 85, 247, 0.15)',
                         borderColor: '#a855f7',
-                        pointBackgroundColor: '#fff',
+                        pointBackgroundColor: '#a855f7',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
                         borderWidth: 2
                     }]
                 },
                 options: {
-                    scales: { r: { min: 0, max: 10, ticks: { display: false, stepSize: 2 }, pointLabels: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.1)' }, angleLines: { color: 'rgba(255,255,255,0.1)' } } },
+                    scales: { r: { min: 0, max: 10, ticks: { display: false, stepSize: 2 }, pointLabels: { color: '#64748b', font: { size: 11, weight: '600' } }, grid: { color: '#e2e8f0' }, angleLines: { color: '#e2e8f0' } } },
                     plugins: { legend: { display: false } },
                     maintainAspectRatio: true
                 }
@@ -662,17 +688,38 @@
         function renderMetricsList() {
             const container = document.getElementById('metrics-container');
             container.innerHTML = state.metrics.map((m, i) => `
-                <div class="flex justify-between items-center bg-white/5 p-3 rounded-lg border border-white/5 text-xs group hover:bg-white/10 transition-all">
+                ${state.editingMetricIndex === i ? `
+                    <div class="bg-slate-50 p-3 rounded-lg border border-brand-100 text-xs">
+                        <div class="flex flex-col gap-2">
+                            <div class="flex gap-2">
+                                <input id="edit-metric-name-${i}" class="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-brand-500" value="${escapeHtml(m.name || '')}" placeholder="指标名称">
+                                <input id="edit-metric-val-${i}" class="w-24 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-brand-500" value="${escapeHtml(m.current_value || '')}" placeholder="值">
+                                <input id="edit-metric-unit-${i}" class="w-16 bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-brand-500" value="${escapeHtml(m.unit || '')}" placeholder="单位">
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="text-[11px] text-slate-400">
+                                    ${m.broken_threshold ? `⚠️ <${escapeHtml(String(m.broken_threshold))}` : ''}
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="saveMetricEdit(${i})" class="action-btn !px-3 !py-2 text-xs"><i class="fas fa-check"></i></button>
+                                    <button onclick="cancelMetricEdit()" class="action-btn action-btn-secondary !px-3 !py-2 text-xs"><i class="fas fa-xmark"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ` : `
+                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 text-xs group hover:bg-brand-50 hover:border-brand-100 transition-all">
                     <div>
-                        <span class="font-bold text-white">${m.name}:</span>
-                        <span class="text-brand-400 ml-1">${m.current_value} ${m.unit||''}</span>
+                        <span class="font-bold text-slate-700">${m.name}:</span>
+                        <span class="text-brand-600 ml-1 font-semibold">${m.current_value} ${m.unit||''}</span>
                     </div>
                     <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        ${m.broken_threshold ? `<span class="text-[9px] text-red-400">⚠️ &lt;${m.broken_threshold}</span>` : ''}
-                        <button onclick="editMetric(${i})" class="text-gray-400 hover:text-brand-400"><i class="fas fa-edit"></i></button>
-                        <button onclick="removeMetric(${i})" class="text-gray-400 hover:text-red-400"><i class="fas fa-trash"></i></button>
+                        ${m.broken_threshold ? `<span class="text-[9px] text-bear font-medium">⚠️ &lt;${m.broken_threshold}</span>` : ''}
+                            <button onclick="startEditMetric(${i})" class="text-slate-400 hover:text-brand-600"><i class="fas fa-edit"></i></button>
+                        <button onclick="removeMetric(${i})" class="text-slate-400 hover:text-bear"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
+                `}
             `).join('');
         }
 
@@ -701,6 +748,31 @@
             }
         }
 
+        function startEditMetric(i) {
+            state.editingMetricIndex = i;
+            renderMetricsList();
+            setTimeout(() => {
+                const el = document.getElementById(`edit-metric-name-${i}`);
+                if (el) el.focus();
+            }, 0);
+        }
+
+        function cancelMetricEdit() {
+            state.editingMetricIndex = null;
+            renderMetricsList();
+        }
+
+        function saveMetricEdit(i) {
+            const m = state.metrics[i] || {};
+            const name = document.getElementById(`edit-metric-name-${i}`)?.value?.trim();
+            const val = document.getElementById(`edit-metric-val-${i}`)?.value?.trim();
+            const unit = document.getElementById(`edit-metric-unit-${i}`)?.value?.trim();
+            if (!name || !val) return showToast("指标名称和值不能为空", "error");
+            state.metrics[i] = { ...m, name, current_value: val, unit: unit || '' };
+            state.editingMetricIndex = null;
+            renderMetricsList();
+        }
+
         function calculateValuationDisplay(params, type, currentPrice, fairValueRange) {
             if (!params && !fairValueRange) return;
             
@@ -727,7 +799,7 @@
             
             const mEl = document.getElementById('txt-margin');
             mEl.innerText = fairValue > 0 ? margin.toFixed(1) + "%" : '---';
-            mEl.className = margin > 0 ? "text-xl font-black text-bull" : "text-xl font-black text-bear";
+            mEl.className = margin > 0 ? "text-2xl font-black text-bull" : "text-2xl font-black text-bear";
             
             const vEl = document.getElementById('txt-verdict');
             if(margin > 30) { vEl.innerText = "BUY"; vEl.className = "verdict-badge verdict-buy"; }
@@ -746,8 +818,11 @@
 
         function restoreData(item, closeDrawer = true) {
             document.getElementById('inp-ticker').value = item.ticker || '';
+            if (item.price !== undefined && item.price !== null && !isNaN(parseFloat(item.price))) {
+                document.getElementById('inp-price').value = parseFloat(item.price);
+            }
             state.currentData = item.data;
-            state.currentData.ticker = item.ticker;
+            if (state.currentData) state.currentData.ticker = item.ticker;
             state.metrics = item.data?.north_star_metrics || [];
             
             // Restore financial inputs
@@ -759,7 +834,9 @@
                 document.getElementById('fin-growth').value = f.revenue_growth_yoy || '';
             }
             
-            renderDashboard(item.data, parseFloat(document.getElementById('inp-price').value) || 0);
+            if (item.data) {
+                renderDashboard(item.data, parseFloat(document.getElementById('inp-price').value) || 0);
+            }
             if (closeDrawer) document.getElementById('historyDrawer').classList.remove('open');
         }
 
@@ -781,7 +858,7 @@
                     renderDashboard(json, parseFloat(document.getElementById('inp-price').value) || 0);
                     showToast("完整分析已导入", "success");
                 } else {
-                    showToast("财报数据已导入，请点击 ReAct", "info");
+                    showToast("财报数据已导入，请点击「分析/推演」", "info");
                 }
                 
                 toggleImport();
@@ -804,15 +881,37 @@
         // === HELPERS ===
         function setLoading(type, loading) {
             const btn = document.getElementById(`btn-${type}`);
+            if (!btn) return;
             if (loading) {
                 btn.disabled = true;
                 btn.innerHTML = `<div class="loader w-4 h-4"></div> ${type === 'analyze' ? '分析中...' : '推演中...'}`;
             } else {
                 btn.disabled = false;
                 btn.innerHTML = type === 'analyze' 
-                    ? '<i class="fas fa-brain"></i> 分析' 
-                    : '<i class="fas fa-bolt"></i> ReAct';
+                    ? '<i class="fas fa-brain"></i> 分析/推演' 
+                    : '<i class="fas fa-bolt text-brand-500"></i> ReAct';
             }
+        }
+
+        function setPrimaryLoading(loading, label) {
+            const btn = document.getElementById('btn-analyze');
+            if (!btn) return;
+            if (loading) {
+                btn.disabled = true;
+                btn.innerHTML = `<div class="loader w-4 h-4"></div> ${label || '处理中...'}`;
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-brain"></i> 分析/推演';
+            }
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
         
         function showToast(msg, type = 'success') {
